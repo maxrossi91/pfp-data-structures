@@ -1,0 +1,2 @@
+add_executable(pf_parsing_test pf_parsing_test.cpp)
+target_link_libraries(pf_parsing_test common gsacak sdsl)

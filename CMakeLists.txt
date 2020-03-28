@@ -34,7 +34,7 @@ add_subdirectory(thirdparty)
 
 # Configure the compiler with the appropriate flags
 # ------------------------------------------------------------------------------
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
   # using Clang
   include(ConfigureCompilerClang)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")

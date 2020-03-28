@@ -18,7 +18,7 @@ configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/Big-BWT/gsa/gsacak.h" "${CMAKE_CURR
 ## Add sdsl-lite
 set(sdsl-lite_cmake_file ${CMAKE_CURRENT_LIST_DIR}/sdsl-lite/CMakeLists.txt)
 if(NOT EXISTS ${sdsl-lite_cmake_file})
-    EXECUTE_PROCESS(COMMAND git submodule update --init external/sdsl-lite
+    EXECUTE_PROCESS(COMMAND git submodule update --init thirdparty/sdsl-lite
                     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/..
                     OUTPUT_QUIET
             )

@@ -704,6 +704,10 @@ private:
       }
     }
 
+    // rank & select support
+    w_structure.bv_rank = wt_bv::rank_1_type(&w_structure.bit_vector);
+    w_structure.bv_select = wt_bv::select_1_type(&w_structure.bit_vector);
+
     w_structure.left = std::unique_ptr<wt_node>(new wt_node());
     w_structure.right = std::unique_ptr<wt_node>(new wt_node());
 

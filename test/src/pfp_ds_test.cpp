@@ -720,7 +720,6 @@ private:
     std::vector<uint32_t> parse_left;
     std::vector<uint32_t> parse_right;
 
-    // std::cout << "> Creating bit vector" << std::endl;
     for (size_t i = 0; i < parse.size(); i++) {
       // TODO: direct access data structure
       const auto iter = std::find(alphabet.begin(), alphabet.end(), parse[i]);
@@ -791,7 +790,36 @@ public:
     };
     std::sort(alphabet.begin(), alphabet.end(), co_lexi_dict_cmp);
 
-    wt.construct(alphabet, pfp.pars.p);
+    assert(pfp.pars.p.size() == pfp.pars.saP.size());
+    // std::cout << "p size: " << pfp.pars.p.size() << " | SA of P size: " << pfp.pars.saP.size() << std::endl;
+
+    // create BWT(P)
+    std::vector<uint32_t> bwt_p(pfp.pars.p.size(), 0);
+    for (size_t i = 0; i < pfp.pars.p.size(); ++i)
+    {
+      if (pfp.pars.saP[i] > 0)
+        bwt_p[i] = pfp.pars.p[pfp.pars.saP[i] - 1];
+      else
+        bwt_p[i] = pfp.pars.p[pfp.pars.saP.size() - 1 - 1];
+
+      /*
+      if (pfp.pars.p[pfp.pars.saP[i]] == 0)
+      {
+        std::cout << "Mame nulu!" << std::endl;
+        std::cout << " - i: " << i << std::endl;
+        std::cout << " - saP: " << pfp.pars.saP[i] << std::endl;
+        std::cout << " - P: " << pfp.pars.p[i] << std::endl;
+
+        bwt_p[i] = pfp.pars.p[pfp.pars.saP[i]];
+      }
+      else
+      {
+        // pass
+      }
+      */
+    }
+
+    wt.construct(alphabet, bwt_p);
     // wt.print_leafs();
   }
 };

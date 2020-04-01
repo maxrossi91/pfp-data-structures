@@ -379,17 +379,26 @@ class pfp_wt {
 public:
   using wt_bv = sdsl::bit_vector;
   struct wt_node {
+    wt_node (wt_node * parent = nullptr)
+      : parent(parent)
+    { }
+
     wt_bv bit_vector;
-    wt_bv::rank_1_type bv_rank;
-    wt_bv::select_1_type bv_select;
+    wt_bv::rank_1_type bv_rank_1;
+    wt_bv::select_1_type bv_select_1;
 
-    uint32_t phrase_id;
+    uint32_t phrase_id = 0;
 
+    wt_node * parent = nullptr;
     std::unique_ptr<wt_node> left;
     std::unique_ptr<wt_node> right;
 
-    bool is_leaf () {
+    bool is_leaf () const {
       return !left.get();
+    }
+
+    bool is_root () const {
+      return parent == nullptr;
     }
   };
 
@@ -399,12 +408,10 @@ public:
 
   pfp_wt(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse)
     : root(new wt_node()) {
-    verbose("Construction of WT of P");
     create_bwt_rec(*root, sorted_alphabet, parse);
   }
 
   void construct(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse) {
-    verbose("Construction of WT of P");
     create_bwt_rec(*root, sorted_alphabet, parse);
   }
 
@@ -414,11 +421,30 @@ public:
     std::cout << std::endl;
   }
 
-  // rank, select
+  // operator[] - get phrase ID on i-th position
+  uint32_t operator[] (const size_t i) {
+    assert(i < root->bit_vector.size());
+
+    return get_phrase_id(*root, i); // WT[] is 0-based
+  }
 
 private:
   // root node of wavelet tree
   std::unique_ptr<wt_node> root;
+
+  uint32_t get_phrase_id(const wt_node & node, const size_t i) {
+    if (node.is_leaf()) {
+      return node.phrase_id;
+    }
+
+    const auto rank_bit_1 = node.bv_rank_1(i + 1);
+    if (node.bit_vector[i]) {
+      return get_phrase_id(*node.right, rank_bit_1 - 1);
+    }
+    else {
+      return get_phrase_id(*node.left, i - rank_bit_1);
+    }
+  }
 
   void create_bwt_rec(wt_node & w_structure, const std::vector<uint32_t> & alphabet, const std::vector<uint32_t> & parse) {
     // divide alphabet to two sets
@@ -451,11 +477,11 @@ private:
     }
 
     // rank & select support
-    w_structure.bv_rank = wt_bv::rank_1_type(&w_structure.bit_vector);
-    w_structure.bv_select = wt_bv::select_1_type(&w_structure.bit_vector);
+    w_structure.bv_rank_1 = wt_bv::rank_1_type(&w_structure.bit_vector);
+    w_structure.bv_select_1 = wt_bv::select_1_type(&w_structure.bit_vector);
 
-    w_structure.left = std::unique_ptr<wt_node>(new wt_node());
-    w_structure.right = std::unique_ptr<wt_node>(new wt_node());
+    w_structure.left = std::unique_ptr<wt_node>(new wt_node(std::addressof(w_structure)));
+    w_structure.right = std::unique_ptr<wt_node>(new wt_node(std::addressof(w_structure)));
 
     create_bwt_rec(*(w_structure.left), std::vector<uint32_t>(alphabet.begin(), alphabet.begin() + tres), parse_left);
     create_bwt_rec(*(w_structure.right), std::vector<uint32_t>(alphabet.begin() + tres, alphabet.end()), parse_right);
@@ -805,8 +831,8 @@ public:
 //  - Rozdeleni alphabet je potreba kontrolovat na pritomnost v te konkretni casti alphabety
 void create_W_simple() {
   std::vector<std::string> dict {"##GATTAC", "ACAT#", "AGATA##", "T#GATAC", "T#GATTAG"};
-  std::vector<uint32_t> parse {0, 1, 3, 1, 4, 2};
-  std::vector<uint32_t> indices {0, 1, 2, 3, 4};
+  std::vector<uint32_t> parse {1, 2, 4, 2, 5, 3};
+  std::vector<uint32_t> indices {1, 2, 3, 4, 5};
 
   std::vector<uint8_t> dict2 = {'#', '#', 'G', 'A', 'T', 'T', 'A', 'C', EndOfWord,
                                 'A', 'C', 'A', 'T', '#', EndOfWord,
@@ -826,50 +852,43 @@ void create_W_simple() {
   const std::vector<size_t> phrase_length {8, 5, 7, 7, 8};
 
   // co-lexi compare function
-  auto co_lexi_dict_cmp = [&](const uint32_t & i, const uint32_t & j) -> bool {
-    // compare i-th phrase with j-th phrase
-    // get start and end of phrases
-    auto i_start = select_b_d(i + 1);
-    auto i_end = i_start + phrase_length[i] - 1;
-    auto j_start = select_b_d(j + 1);
-    auto j_end = j_start + phrase_length[j] - 1;
+  auto co_lexi_dict_cmp = [&](const uint32_t i, const uint32_t j) {
+    auto i_start = select_b_d(i);
+    auto i_end = i_start + phrase_length[i - 1] - 1;
+    auto j_start = select_b_d(j);
+    auto j_end = j_start + phrase_length[j - 1] - 1;
 
-    std::cout << "------------- i: " << i << " j: " << j << std::endl
-              << "i_s: " << i_start << " | i_e: " << i_end << std::endl
-              << "j_s: " << j_start << " | j_e: " << j_end << std::endl;
-
-    auto i_r_begin = dict2.rend() - i_end - 1; // remove i EndOfWords
+    auto i_r_begin = dict2.rend() - i_end - 1;
     auto i_r_end = dict2.rend() - i_start;
     auto j_r_begin = dict2.rend() - j_end - 1;
     auto j_r_end = dict2.rend() - j_start;
-    std::cout << "> comparing" << std::endl
-              << "  - ";
-    std::copy(i_r_begin, i_r_end, std::ostream_iterator<uint8_t>(std::cout, ""));
-    std::cout << std::endl
-              << "  - ";
-    std::copy(j_r_begin, j_r_end, std::ostream_iterator<uint8_t>(std::cout, ""));
-    std::cout << std::endl;
 
     return std::lexicographical_compare(i_r_begin, i_r_end, j_r_begin, j_r_end);
   };
   std::sort(indices.begin(), indices.end(), co_lexi_dict_cmp);
 
   std::cout << "0: " << select_b_d(1) << " | 1: " << select_b_d(2) << std::endl;
-  std::cout << "last: " << select_b_d(5) << " | last+1: " << select_b_d(6) << std::endl;
+  std::cout << "last: " << select_b_d(5) << std::endl;
 
   for (const auto i : indices)
     std::cout << i << " | ";
   std::cout << std::endl;
 
   // create wavelet tree based on co-lexi sorted phrases
-  // pfp_wt wt(indices, parse);
-  // wt.print_leafs();
+  pfp_wt wt(indices, parse);
+  wt.print_leafs();
+  std::cout << "wt[0]" << wt[0] << std::endl;
+  std::cout << "wt[1]" << wt[1] << std::endl;
+  std::cout << "wt[2]" << wt[2] << std::endl;
+  std::cout << "wt[3]" << wt[3] << std::endl;
+  std::cout << "wt[4]" << wt[4] << std::endl;
+  std::cout << "wt[5]" << wt[5] << std::endl;
 }
 
 int main(int argc, char const *argv[]) {
 
-  // create_W_simple();
-  // return 0;
+  create_W_simple();
+  return 0;
 
   if(argc < 2)
     error("input file required");

@@ -177,14 +177,13 @@ public:
       // inverse suffix array of the dictionary.
       verbose("Computing ISA of dictionary");
       elapsed_time(
-      {
-        isaD.resize(d.size());
-        for(int i = 0; i < saD.size(); ++i){
-          isaD[saD[i]] = i;
+        {
+          isaD.resize(d.size());
+          for(int i = 0; i < saD.size(); ++i){
+            isaD[saD[i]] = i;
+          }
         }
-      }
       );
-
     }
 
     assert(!rmq_lcp_D_flag_ || (lcpD_flag || lcpD_flag_));
@@ -193,35 +192,41 @@ public:
 
       verbose("Computing RMQ over LCP of dictionary");
       // Compute the LCP rank of D
-      rmq_lcp_D = sdsl::rmq_succinct_sct<>(&lcpD);
+      elapsed_time(
+        rmq_lcp_D = sdsl::rmq_succinct_sct<>(&lcpD)
+      );
     }
 
     // if(colex_daD_flag_){
       // co-lex document array of the dictionary.
       verbose("Computing co-lex DA of dictionary");
-      std::vector<uint_t>colex_id(n_phrases());
-      std::vector<uint_t>inv_colex_id(n_phrases()); // I am using it as starting positions
-      for(int i = 0, j = 0; i < d.size(); ++i )
-        if(d[i+1]==EndOfWord){
-          colex_id[j] = j;
-          inv_colex_id[j++] = i;
+      elapsed_time(
+        {  
+          std::vector<uint_t>colex_id(n_phrases());
+          std::vector<uint_t>inv_colex_id(n_phrases()); // I am using it as starting positions
+          for(int i = 0, j = 0; i < d.size(); ++i )
+            if(d[i+1]==EndOfWord){
+              colex_id[j] = j;
+              inv_colex_id[j++] = i;
+            }
+
+          colex_document_array_helper(inv_colex_id,colex_id,0,n_phrases());
+
+          // computing inverse colex id
+          for(int i = 0; i < colex_id.size(); ++i){
+            inv_colex_id[colex_id[i]] = i;
+          }
+          colex_id.clear();
+
+          colex_daD.resize(d.size());
+          for(int i = 0; i < colex_daD.size(); ++i ){
+            colex_daD[i]  = inv_colex_id[daD[i]];
+          }
         }
 
-      colex_document_array_helper(inv_colex_id,colex_id,0,n_phrases());
-
-      // computing inverse colex id
-      for(int i = 0; i < colex_id.size(); ++i){
-        inv_colex_id[colex_id[i]] = i;
-      }
-      colex_id.clear();
-
-      colex_daD.resize(d.size());
-      for(int i = 0; i < colex_daD.size(); ++i ){
-        colex_daD[i]  = inv_colex_id[daD[i]];
-      }
-
-      rmq_colex_daD = sdsl::rmq_succinct_sct<>(&colex_daD);
-      rMq_colex_daD = sdsl::range_maximum_sct<>::type(&colex_daD);
+        rmq_colex_daD = sdsl::rmq_succinct_sct<>(&colex_daD);
+        rMq_colex_daD = sdsl::range_maximum_sct<>::type(&colex_daD);
+      );
 
 
     // }
@@ -324,17 +329,23 @@ public:
       saP.resize(p.size());
       // suffix array of the parsing.
       verbose("Computing SA of the parsing");
-      sacak_int(&p[0],&saP[0],p.size(),alphabet_size);
+      elapsed_time(
+        sacak_int(&p[0],&saP[0],p.size(),alphabet_size);
+      );
     }
 
     assert(!isaP_flag_ || (saP_flag || saP_flag_) );
     if(isaP_flag_ && !isaP_flag){
       // inverse suffix array of the parsing.
       verbose("Computing ISA of the parsing");
-      isaP.resize(p.size());
-      for(int i = 0; i < saP.size(); ++i){
-        isaP[saP[i]] = i;
-      }
+      elapsed_time(
+        {
+          isaP.resize(p.size());
+          for(int i = 0; i < saP.size(); ++i){
+            isaP[saP[i]] = i;
+          }
+        }
+      )
 
     }
 
@@ -342,7 +353,9 @@ public:
       lcpP.resize(p.size());
       // LCP array of the parsing.
       verbose("Computing LCP of the parsing");
-      LCP_array(&p[0], isaP, saP, p.size(), lcpP);
+      elapsed_time(
+        LCP_array(&p[0], isaP, saP, p.size(), lcpP);
+      );
     }
 
 
@@ -351,7 +364,9 @@ public:
       rmq_lcp_P_flag = true;
       verbose("Computing RMQ over LCP of the parsing");
       // Compute the LCP rank of P
-      rmq_lcp_P = sdsl::rmq_succinct_sct<>(&lcpP);
+      elapsed_time(
+        rmq_lcp_P = sdsl::rmq_succinct_sct<>(&lcpP);
+      );
     }
 
   }
@@ -855,17 +870,33 @@ int main(int argc, char const *argv[]) {
   size_t w = 10;
   pf_parsing pf(filename,w);
 
-  verbose("Dictionary size: " , pf.dict.d.size());
-  verbose("Parsing size: " , pf.pars.p.size());
+  verbose("Dictionary size (bytes):       " , sizeof(pf.dict.d[0]) * pf.dict.d.size());
+  verbose("Dictionary SA size (bytes):    " , sizeof(pf.dict.saD[0]) * pf.dict.saD.size());
+  verbose("Dictionary ISA size (bytes):   " , sizeof(pf.dict.isaD[0]) * pf.dict.isaD.size());
+  verbose("Dictionary LCP size (bytes):   " , sizeof(pf.dict.lcpD[0]) * pf.dict.lcpD.size());
+  verbose("Dictionary DA size (bytes):    " , sizeof(pf.dict.daD[0]) * pf.dict.daD.size());
+  verbose("Dictionary co-DA size (bytes): " , sizeof(pf.dict.colex_daD[0]) * pf.dict.colex_daD.size());
+  verbose("Parsing size (bytes):          " , sizeof(pf.pars.p[0]) * pf.pars.p.size());
+  verbose("Parsing SA size (bytes):       " , sizeof(pf.pars.saP[0]) * pf.pars.saP.size());
+  verbose("Parsing ISA size (bytes):      " , sizeof(pf.pars.isaP[0]) * pf.pars.isaP.size());
+  verbose("Parsing LCP size (bytes):      " , sizeof(pf.pars.lcpP[0]) * pf.pars.lcpP.size());
 
 
   size_t n = pf.n;
 
-  pfp_lce_support lce_ds(pf);
-  pfp_sa pfp_sa(pf);
+  verbose("Providing LCE support");
+  elapsed_time(
+    pfp_lce_support lce_ds(pf)
+  );
+
+  verbose("Computing W");
+  elapsed_time(
+    pfp_sa pfp_sa(pf)
+  );
 
   // Building b_bwt
 
+#if 0
 // TEST lca_ds
 std::vector<unsigned char> text;
 read_fasta_file(filename.c_str(), text);
@@ -919,7 +950,7 @@ for(int i = 1; i < text.size()-1 ; ++i){
     assert( a == b);
 }
 
-
+#endif
 
 
 

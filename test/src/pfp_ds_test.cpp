@@ -417,56 +417,58 @@ public:
 
 
     verbose("Computing b_bwt and M of the parsing");
-    // Build the bitvector storing the position of the beginning of each phrase.
-    b_bwt.resize(n);
-    for(size_t i = 0; i < 3*64; ++i) b_bwt[i] = false; // bug in resize
+    elapsed_time({
+      // Build the bitvector storing the position of the beginning of each phrase.
+      b_bwt.resize(n);
+      for(size_t i = 0; i < 3*64; ++i) b_bwt[i] = false; // bug in resize
 
-    assert(dict.d[dict.saD[0]] == EndOfDict);
-    size_t i = 1; // This should be safe since the first entry of sa is always the dollarsign used to compute the sa
-    size_t j = 0;
-    while (i < dict.saD.size()) {
-      size_t left = j;
+      assert(dict.d[dict.saD[0]] == EndOfDict);
+      size_t i = 1; // This should be safe since the first entry of sa is always the dollarsign used to compute the sa
+      size_t j = 0;
+      while (i < dict.saD.size()) {
+        size_t left = j;
 
-      auto  sn = dict.saD[i];
-      // Check if the suffix has length at least w and is not the complete phrase.
-      auto phrase = dict.daD[i] + 1; assert(phrase > 0 && phrase < freq.size()); // + 1 because daD is 0-based
-      size_t suffix_length = dict.select_b_d(dict.rank_b_d(sn+1) +1) - sn - 1;
-      if(dict.b_d[sn] || suffix_length < w){
-        ++i; // Skip
-      }else{
-        // use the RMQ data structure to find how many of the following suffixes are the same except for the terminator (so they're the same suffix but in different phrases)
-        // use the document array and the table of phrase frequencies to find the phrases frequencies and sum them up
-        b_bwt[j++] = true; j += freq[phrase]-1; // the next bits are 0s
-        i++;
-        if (i < dict.saD.size()){
-          auto new_sn = dict.saD[i];
-          auto new_phrase = dict.daD[i] + 1; assert(new_phrase > 0 && new_phrase < freq.size()); // + 1 because daD is 0-based
-          size_t new_suffix_length = dict.select_b_d(dict.rank_b_d(new_sn+1) +1) - new_sn - 1;
+        auto  sn = dict.saD[i];
+        // Check if the suffix has length at least w and is not the complete phrase.
+        auto phrase = dict.daD[i] + 1; assert(phrase > 0 && phrase < freq.size()); // + 1 because daD is 0-based
+        size_t suffix_length = dict.select_b_d(dict.rank_b_d(sn+1) +1) - sn - 1;
+        if(dict.b_d[sn] || suffix_length < w){
+          ++i; // Skip
+        }else{
+          // use the RMQ data structure to find how many of the following suffixes are the same except for the terminator (so they're the same suffix but in different phrases)
+          // use the document array and the table of phrase frequencies to find the phrases frequencies and sum them up
+          b_bwt[j++] = true; j += freq[phrase]-1; // the next bits are 0s
+          i++;
+          if (i < dict.saD.size()){
+            auto new_sn = dict.saD[i];
+            auto new_phrase = dict.daD[i] + 1; assert(new_phrase > 0 && new_phrase < freq.size()); // + 1 because daD is 0-based
+            size_t new_suffix_length = dict.select_b_d(dict.rank_b_d(new_sn+1) +1) - new_sn - 1;
 
-          while (i < dict.saD.size() && (dict.lcpD[i] >= suffix_length) && (suffix_length == new_suffix_length)){
-              j += freq[new_phrase];
-              ++i;
+            while (i < dict.saD.size() && (dict.lcpD[i] >= suffix_length) && (suffix_length == new_suffix_length)){
+                j += freq[new_phrase];
+                ++i;
 
-              if (i < dict.saD.size()){
-                new_sn = dict.saD[i];
-                new_phrase = dict.daD[i] + 1; assert(new_phrase > 0 && new_phrase < freq.size()); // + 1 because daD is 0-based
-                new_suffix_length = dict.select_b_d(dict.rank_b_d(new_sn+1) +1) - new_sn - 1;
-              }
+                if (i < dict.saD.size()){
+                  new_sn = dict.saD[i];
+                  new_phrase = dict.daD[i] + 1; assert(new_phrase > 0 && new_phrase < freq.size()); // + 1 because daD is 0-based
+                  new_suffix_length = dict.select_b_d(dict.rank_b_d(new_sn+1) +1) - new_sn - 1;
+                }
+            }
           }
+
+          // Computing M
+          size_t right = j-1;
+          M_entry_t m;
+          m.len = suffix_length;
+          m.left = dict.colex_daD[dict.rmq_colex_daD(left,right)];
+          m.right = dict.colex_daD[dict.rMq_colex_daD(left,right)];
+
+          M.push_back(m);
         }
-
-        // Computing M
-        size_t right = j-1;
-        M_entry_t m;
-        m.len = suffix_length;
-        m.left = dict.colex_daD[dict.rmq_colex_daD(left,right)];
-        m.right = dict.colex_daD[dict.rMq_colex_daD(left,right)];
-
-        M.push_back(m);
       }
-    }
 
 
+    }); /// End elapsed_time
 
   }
 
@@ -653,6 +655,7 @@ sdsl::bit_vector compute_B_BWT(
           }
         }
       }
+
       return b_bwt;
 }
 

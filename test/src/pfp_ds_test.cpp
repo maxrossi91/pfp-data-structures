@@ -32,6 +32,7 @@
 extern "C" {
 #include<gsacak.h>
 }
+#include<malloc_count.h>
 
 //**************************** From  Big-BWT ***********************************
 // special symbols used by the construction algorithm:
@@ -143,34 +144,46 @@ public:
       daD.resize(d.size());
       // suffix array, LCP array, and Document array of the dictionary.
       verbose("Computing SA, LCP, and DA of dictionary");
-      gsacak(&d[0],&saD[0],&lcpD[0],&daD[0],d.size());
+      elapsed_time(
+        gsacak(&d[0],&saD[0],&lcpD[0],&daD[0],d.size())
+      );
     }else if(saD_flag_ && lcpD_flag_){
       saD.resize(d.size());
       lcpD.resize(d.size());
       // suffix array and LCP array of the dictionary.
       verbose("Computing SA, and LCP of dictionary");
-      gsacak(&d[0],&saD[0],&lcpD[0],nullptr,d.size());
+      elapsed_time(
+        gsacak(&d[0],&saD[0],&lcpD[0],nullptr,d.size())
+      );
     } else if(saD_flag_ && daD_flag_){
       saD.resize(d.size());
       daD.resize(d.size());
       // suffix array and LCP array of the dictionary.
       verbose("Computing SA, and DA of dictionary");
-      gsacak(&d[0],&saD[0],nullptr,&daD[0],d.size());
+      elapsed_time(
+        gsacak(&d[0],&saD[0],nullptr,&daD[0],d.size())
+      );
     } else if(saD_flag_){
       saD.resize(d.size());
       // suffix array and LCP array of the dictionary.
       verbose("Computing SA of dictionary");
-      gsacak(&d[0],&saD[0],nullptr,nullptr,d.size());
+      elapsed_time(
+        gsacak(&d[0],&saD[0],nullptr,nullptr,d.size())
+      );
     }
 
     assert(!isaD_flag_ || (saD_flag || saD_flag_) );
     if(isaD_flag_ && !isaD_flag){
       // inverse suffix array of the dictionary.
       verbose("Computing ISA of dictionary");
-      isaD.resize(d.size());
-      for(int i = 0; i < saD.size(); ++i){
-        isaD[saD[i]] = i;
+      elapsed_time(
+      {
+        isaD.resize(d.size());
+        for(int i = 0; i < saD.size(); ++i){
+          isaD[saD[i]] = i;
+        }
       }
+      );
 
     }
 
@@ -688,7 +701,7 @@ private:
     std::vector<uint32_t> parse_left;
     std::vector<uint32_t> parse_right;
 
-    std::cout << "> Creating bit vector" << std::endl;
+    // std::cout << "> Creating bit vector" << std::endl;
     for (size_t i = 0; i < parse.size(); i++) {
       // TODO: direct access data structure
       const auto iter = std::find(alphabet.begin(), alphabet.end(), parse[i]);

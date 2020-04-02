@@ -41,6 +41,8 @@
 
 #include <vector>      // std::vector
 
+#include <chrono>       // high_resolution_clock
+
 
 std::string NowTime();
 void _internal_messageInfo(const std::string message);
@@ -59,6 +61,7 @@ std::string NowTime()
     snprintf(result, 100, "%s"/*.%06ld"*/, buffer/*, (long)tv.tv_usec*/);
     return result;
 }
+
 
 template<typename T>
 inline void _internal_message_helper(std::stringstream &ss, T const &first) { ss << first; }
@@ -203,5 +206,18 @@ void read_fasta_file(const char *filename, std::vector<unsigned char>& v){
   	fclose(fd);
 }
 
+
+//*********************** Time resources ***************************************
+
+/*!
+ * op the operation that we want to measure
+ */
+#define elapsed_time(op) \
+{ \
+  std::chrono::high_resolution_clock::time_point t_insert_start = std::chrono::high_resolution_clock::now(); \
+  op; \
+  std::chrono::high_resolution_clock::time_point t_insert_end = std::chrono::high_resolution_clock::now(); \
+  verbose("Elapsed time (s): ",std::chrono::duration<double, std::ratio<60>>(t_insert_end - t_insert_start ).count()); \
+}
 
 #endif /* end of include guard: _COMMON_HH */

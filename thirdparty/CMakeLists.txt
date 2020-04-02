@@ -13,6 +13,11 @@ add_library(gsacak OBJECT Big-BWT/gsa/gsacak.c Big-BWT/gsa/gsacak.h)
 target_include_directories(gsacak PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/Big-BWT/gsa")
 configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/Big-BWT/gsa/gsacak.h" "${CMAKE_CURRENT_BINARY_DIR}/Big-BWT/gsa/gsacak.h" COPYONLY )
 
+add_library(malloc_count OBJECT Big-BWT/malloc_count.c Big-BWT/malloc_count.h)
+target_link_libraries(malloc_count dl)
+target_include_directories(malloc_count PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/Big-BWT")
+configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/Big-BWT/malloc_count.h" "${CMAKE_CURRENT_BINARY_DIR}/Big-BWT/malloc_count.h" COPYONLY )
+
 
 
 ## Add sdsl-lite

@@ -407,11 +407,20 @@ public:
   { }
 
   pfp_wt(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse)
-    : root(new wt_node()) {
+    : root(new wt_node()), alphabet(sorted_alphabet) {
+    for (size_t i = 0; i < alphabet.size(); ++i) {
+      i_alphabet[alphabet[i]] = i;
+    }
+
     create_bwt_rec(*root, sorted_alphabet, parse);
   }
 
   void construct(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse) {
+    alphabet = sorted_alphabet;
+    for (size_t i = 0; i < alphabet.size(); ++i) {
+      i_alphabet[alphabet[i]] = i;
+    }
+
     create_bwt_rec(*root, sorted_alphabet, parse);
   }
 
@@ -428,9 +437,50 @@ public:
     return get_phrase_id(*root, i); // WT[] is 0-based
   }
 
+  // rank & select
+  size_t rank(const size_t i, const uint32_t c) const {
+    assert(i > 0 && i <= root->bit_vector.size());
+
+    if (std::find(alphabet.begin(), alphabet.end(), c) == alphabet.end()) {
+      return 0;
+    }
+
+    wt_node * t_node = std::addressof(*root);
+    size_t j = i;
+    uint32_t alphabet_size = alphabet.size();
+    uint32_t alphabet_start = 0;
+    while (!t_node->is_leaf()) {
+      const auto idx = i_alphabet.at(c) - alphabet_start;
+      const auto tres = alphabet_size / 2;
+      const auto rank_bit_1 = t_node->bv_rank_1(j);
+
+      if (idx < tres) {
+        // left child
+        j -= rank_bit_1;
+        alphabet_size = tres;
+        t_node = std::addressof(*t_node->left);
+      }
+      else {
+        // right child
+        j = rank_bit_1;
+        alphabet_size -= tres;
+        alphabet_start += tres;
+        t_node = std::addressof(*t_node->right);
+      }
+    }
+
+    return j;
+  }
+
+  size_t size() const {
+    return root->bit_vector.size();
+  }
+
 private:
   // root node of wavelet tree
   std::unique_ptr<wt_node> root;
+  std::vector<uint32_t> alphabet;
+  std::map<uint32_t, size_t> i_alphabet;
 
   uint32_t get_phrase_id(const wt_node & node, const size_t i) {
     if (node.is_leaf()) {
@@ -876,13 +926,20 @@ void create_W_simple() {
 
   // create wavelet tree based on co-lexi sorted phrases
   pfp_wt wt(indices, parse);
+
   wt.print_leafs();
-  std::cout << "wt[0]" << wt[0] << std::endl;
-  std::cout << "wt[1]" << wt[1] << std::endl;
-  std::cout << "wt[2]" << wt[2] << std::endl;
-  std::cout << "wt[3]" << wt[3] << std::endl;
-  std::cout << "wt[4]" << wt[4] << std::endl;
-  std::cout << "wt[5]" << wt[5] << std::endl;
+  std::cout << "> access query" << std::endl;
+  std::cout << "wt[0]: " << wt[0] << " | wt[1]: " << wt[1] << " | wt[2]: " << wt[2]
+            << " | wt[3]: " << wt[3] << " | wt[4]: " << wt[4] << " | wt[5]: " << wt[5] << std::endl;
+  
+  std::cout << "> rank queries" << std::endl;
+  for (size_t j = 0; j < indices.size(); ++j) {
+    std::cout << indices[j] << ": ";
+    for (size_t i = 1; i <= wt.size(); ++i) {
+      std::cout << " | rank(" << i << ", " << indices[j] << "): " << wt.rank(i, indices[j]);
+    }
+    std::cout << std::endl;
+  }
 }
 
 int main(int argc, char const *argv[]) {

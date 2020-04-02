@@ -386,6 +386,7 @@ public:
     wt_bv bit_vector;
     wt_bv::rank_1_type bv_rank_1;
     wt_bv::select_1_type bv_select_1;
+    wt_bv::select_0_type bv_select_0;
 
     uint32_t phrase_id = 0;
 
@@ -402,6 +403,11 @@ public:
     }
   };
 
+  struct leaf_info {
+    size_t alphabet_index;
+    wt_node * leaf_link = nullptr;
+  };
+
   pfp_wt()
     : root(new wt_node())
   { }
@@ -409,7 +415,7 @@ public:
   pfp_wt(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse)
     : root(new wt_node()), alphabet(sorted_alphabet) {
     for (size_t i = 0; i < alphabet.size(); ++i) {
-      i_alphabet[alphabet[i]] = i;
+      leafs[alphabet[i]].alphabet_index = i;
     }
 
     create_bwt_rec(*root, sorted_alphabet, parse);
@@ -418,7 +424,7 @@ public:
   void construct(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse) {
     alphabet = sorted_alphabet;
     for (size_t i = 0; i < alphabet.size(); ++i) {
-      i_alphabet[alphabet[i]] = i;
+      leafs[alphabet[i]].alphabet_index = i;
     }
 
     create_bwt_rec(*root, sorted_alphabet, parse);
@@ -450,7 +456,7 @@ public:
     uint32_t alphabet_size = alphabet.size();
     uint32_t alphabet_start = 0;
     while (!t_node->is_leaf()) {
-      const auto idx = i_alphabet.at(c) - alphabet_start;
+      const auto idx = leafs.at(c).alphabet_index - alphabet_start;
       const auto tres = alphabet_size / 2;
       const auto rank_bit_1 = t_node->bv_rank_1(j);
 
@@ -472,6 +478,24 @@ public:
     return j;
   }
 
+  size_t select(const size_t i, const uint32_t c) const {
+    assert (i > 0 && i <= rank(size(), c));
+
+    wt_node * t_node = leafs.at(c).leaf_link;
+    size_t j = i;
+    while (!t_node->is_root()) {
+      if (std::addressof(*(t_node->parent->left)) == t_node) {
+        j = t_node->parent->bv_select_0(j) + 1;
+      }
+      else {
+        j = t_node->parent->bv_select_1(j) + 1;
+      }
+      t_node = t_node->parent;
+    }
+
+    return j - 1; // return index 0-based
+  }
+
   size_t size() const {
     return root->bit_vector.size();
   }
@@ -480,7 +504,7 @@ private:
   // root node of wavelet tree
   std::unique_ptr<wt_node> root;
   std::vector<uint32_t> alphabet;
-  std::map<uint32_t, size_t> i_alphabet;
+  std::map<uint32_t, leaf_info> leafs;
 
   uint32_t get_phrase_id(const wt_node & node, const size_t i) {
     if (node.is_leaf()) {
@@ -502,6 +526,7 @@ private:
     if (tres == 0) {
       // leaf
       w_structure.phrase_id = alphabet[0];
+      leafs[w_structure.phrase_id].leaf_link = std::addressof(w_structure);
 
       return;
     }
@@ -529,6 +554,7 @@ private:
     // rank & select support
     w_structure.bv_rank_1 = wt_bv::rank_1_type(&w_structure.bit_vector);
     w_structure.bv_select_1 = wt_bv::select_1_type(&w_structure.bit_vector);
+    w_structure.bv_select_0 = wt_bv::select_0_type(&w_structure.bit_vector);
 
     w_structure.left = std::unique_ptr<wt_node>(new wt_node(std::addressof(w_structure)));
     w_structure.right = std::unique_ptr<wt_node>(new wt_node(std::addressof(w_structure)));
@@ -940,6 +966,14 @@ void create_W_simple() {
     }
     std::cout << std::endl;
   }
+
+  std::cout << "> select queries" << std::endl;
+  for (size_t j = 0; j < indices.size(); ++j) {
+    std::cout << indices[j] << ": ";
+    std::cout << " select(" << 1 << ", " << indices[j] << "): " << wt.select(1, indices[j]);
+    std::cout << std::endl;
+  }
+  std::cout << "2: select(" << 2 << ", " << 2 << "): " << wt.select(2, 2) << std::endl;
 }
 
 int main(int argc, char const *argv[]) {

@@ -978,8 +978,8 @@ void create_W_simple() {
 
 int main(int argc, char const *argv[]) {
 
-  create_W_simple();
-  return 0;
+  // create_W_simple();
+  // return 0;
 
   if(argc < 2)
     error("input file required");

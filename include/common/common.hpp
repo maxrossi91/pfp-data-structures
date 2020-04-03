@@ -186,7 +186,8 @@ void read_file(const char *filename, std::vector<T>& ptr){
     fclose(fd);
 }
 
-void read_fasta_file(const char *filename, std::vector<unsigned char>& v){
+template<typename T>
+void read_fasta_file(const char *filename, std::vector<T>& v){
     FILE* fd;
 
     if ((fd = fopen(filename, "r")) == nullptr)
@@ -217,7 +218,7 @@ void read_fasta_file(const char *filename, std::vector<unsigned char>& v){
   std::chrono::high_resolution_clock::time_point t_insert_start = std::chrono::high_resolution_clock::now(); \
   op; \
   std::chrono::high_resolution_clock::time_point t_insert_end = std::chrono::high_resolution_clock::now(); \
-  verbose("Elapsed time (s): ",std::chrono::duration<double, std::ratio<60>>(t_insert_end - t_insert_start ).count()); \
+  verbose("Elapsed time (s): ",std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start ).count()); \
 }
 
 #endif /* end of include guard: _COMMON_HH */

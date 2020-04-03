@@ -44,6 +44,19 @@
 #include <chrono>       // high_resolution_clock
 
 
+//**************************** From  Big-BWT ***********************************
+// special symbols used by the construction algorithm:
+//   they cannot appear in the input file
+//   the 0 symbol is used in the final BWT file as the EOF char
+
+#define Dollar 2     // special char for the parsing algorithm, must be the highest special char
+#define EndOfWord 1  // word delimiter for the plain dictionary file
+#define EndOfDict 0  // end of dictionary delimiter
+//******************************************************************************
+
+
+
+
 std::string NowTime();
 void _internal_messageInfo(const std::string message);
 void _internal_messageWarning( const std::string file, const unsigned int line, const std::string message);
@@ -221,4 +234,26 @@ void read_fasta_file(const char *filename, std::vector<T>& v){
   verbose("Elapsed time (s): ",std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start ).count()); \
 }
 
+
+
+
+//*********************** Kasai et al. LCP construction algorithm ***************************************
+template<typename T, typename S, typename lcp_t>
+void LCP_array(S* s, const std::vector<T>& isa, const std::vector<T>& sa, size_t n, std::vector<lcp_t>& lcp){
+    lcp[0]  = 0;
+
+    T l = 0;
+    for (size_t i = 0; i < n; ++i){
+      // if i is the last character LCP is not defined
+      T k = isa[i];
+      if(k > 0){
+        T j = sa[k-1];
+        // I find the longest common prefix of the i-th suffix and the j-th suffix.
+        while(s[i+l] == s[j+l]) l++;
+        // l stores the length of the longest common prefix between the i-th suffix and the j-th suffix
+        lcp[k] = l;
+        if(l>0) l--;
+      }
+    }
+}
 #endif /* end of include guard: _COMMON_HH */

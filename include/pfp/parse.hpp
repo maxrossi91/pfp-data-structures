@@ -15,8 +15,8 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ .
 */
 /*!
-   \file pfp_parse.hpp
-   \brief pfp_parse.hpp define and build the prefix-free parse data structure.
+   \file parse.hpp
+   \brief parse.hpp define and build the prefix-free parse data structure.
    \author Massimiliano Rossi
    \date 03/04/2020
 */

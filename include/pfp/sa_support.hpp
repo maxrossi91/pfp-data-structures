@@ -31,6 +31,7 @@
 #include <sdsl/int_vector.hpp>
 
 #include<pfp.hpp>
+#include<wt.hpp>
 
 class pfp_sa_support {
 protected:

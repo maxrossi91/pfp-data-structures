@@ -50,7 +50,7 @@ int main(int argc, char const *argv[]) {
     // build cst of the Text
     verbose("Computing CST of the text");
     sdsl::cst_sct3<> cst;
-    elapsed_time(
+    _elapsed_time(
      sdsl::construct_im(cst, static_cast<const char*>(&text[0]), num_bytes);
     );
 

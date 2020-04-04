@@ -90,7 +90,7 @@ public:
       saP.resize(p.size());
       // suffix array of the parsing.
       verbose("Computing SA of the parsing");
-      elapsed_time(
+      _elapsed_time(
         sacak_int(&p[0],&saP[0],p.size(),alphabet_size);
       );
     }
@@ -99,7 +99,7 @@ public:
     if(isaP_flag_ && !isaP_flag){
       // inverse suffix array of the parsing.
       verbose("Computing ISA of the parsing");
-      elapsed_time(
+      _elapsed_time(
         {
           isaP.resize(p.size());
           for(int i = 0; i < saP.size(); ++i){
@@ -114,7 +114,7 @@ public:
       lcpP.resize(p.size());
       // LCP array of the parsing.
       verbose("Computing LCP of the parsing");
-      elapsed_time(
+      _elapsed_time(
         LCP_array(&p[0], isaP, saP, p.size(), lcpP);
       );
     }
@@ -125,7 +125,7 @@ public:
       rmq_lcp_P_flag = true;
       verbose("Computing RMQ over LCP of the parsing");
       // Compute the LCP rank of P
-      elapsed_time(
+      _elapsed_time(
         rmq_lcp_P = sdsl::rmq_succinct_sct<>(&lcpP);
       );
     }

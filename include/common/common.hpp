@@ -226,7 +226,7 @@ void read_fasta_file(const char *filename, std::vector<T>& v){
 /*!
  * op the operation that we want to measure
  */
-#define elapsed_time(op) \
+#define _elapsed_time(op) \
 { \
   std::chrono::high_resolution_clock::time_point t_insert_start = std::chrono::high_resolution_clock::now(); \
   op; \

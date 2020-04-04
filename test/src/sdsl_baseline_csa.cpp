@@ -52,14 +52,14 @@ int main(int argc, char const *argv[]) {
     verbose("Computing CSA of the text");
     sdsl::cache_config cc(false); // do not delete temp files after csa construction
     sdsl::csa_wt<> fm_index;
-    elapsed_time(
+    _elapsed_time(
      sdsl::construct_im(fm_index, static_cast<const char*>(&text[0]), num_bytes);
     );
 
     verbose("Computing LCP of the text");
     cc.delete_files = true; // delete temp files after lcp construction
     sdsl::lcp_wt<> lcp;
-    elapsed_time(
+    _elapsed_time(
      sdsl::construct_im(lcp, static_cast<const char*>(&text[0]), num_bytes);
     );
 

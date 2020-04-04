@@ -115,7 +115,7 @@ public:
       daD.resize(d.size());
       // suffix array, LCP array, and Document array of the dictionary.
       verbose("Computing SA, LCP, and DA of dictionary");
-      elapsed_time(
+      _elapsed_time(
         gsacak(&d[0],&saD[0],&lcpD[0],&daD[0],d.size())
       );
     }else if(saD_flag_ && lcpD_flag_){
@@ -123,7 +123,7 @@ public:
       lcpD.resize(d.size());
       // suffix array and LCP array of the dictionary.
       verbose("Computing SA, and LCP of dictionary");
-      elapsed_time(
+      _elapsed_time(
         gsacak(&d[0],&saD[0],&lcpD[0],nullptr,d.size())
       );
     } else if(saD_flag_ && daD_flag_){
@@ -131,14 +131,14 @@ public:
       daD.resize(d.size());
       // suffix array and LCP array of the dictionary.
       verbose("Computing SA, and DA of dictionary");
-      elapsed_time(
+      _elapsed_time(
         gsacak(&d[0],&saD[0],nullptr,&daD[0],d.size())
       );
     } else if(saD_flag_){
       saD.resize(d.size());
       // suffix array and LCP array of the dictionary.
       verbose("Computing SA of dictionary");
-      elapsed_time(
+      _elapsed_time(
         gsacak(&d[0],&saD[0],nullptr,nullptr,d.size())
       );
     }
@@ -147,7 +147,7 @@ public:
     if(isaD_flag_ && !isaD_flag){
       // inverse suffix array of the dictionary.
       verbose("Computing ISA of dictionary");
-      elapsed_time(
+      _elapsed_time(
         {
           isaD.resize(d.size());
           for(int i = 0; i < saD.size(); ++i){
@@ -163,7 +163,7 @@ public:
 
       verbose("Computing RMQ over LCP of dictionary");
       // Compute the LCP rank of D
-      elapsed_time(
+      _elapsed_time(
         rmq_lcp_D = sdsl::rmq_succinct_sct<>(&lcpD)
       );
     }
@@ -171,7 +171,7 @@ public:
     // if(colex_daD_flag_){
       // co-lex document array of the dictionary.
       verbose("Computing co-lex DA of dictionary");
-      elapsed_time(
+      _elapsed_time(
         {  
           std::vector<uint_t>colex_id(n_phrases());
           std::vector<uint_t>inv_colex_id(n_phrases()); // I am using it as starting positions

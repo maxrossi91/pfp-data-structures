@@ -131,12 +131,12 @@ int main(int argc, char const *argv[]) {
   size_t n = pf.n;
 
   verbose("Providing LCE support");
-  elapsed_time(
+  _elapsed_time(
     pfp_lce_support lce_ds(pf)
   );
 
   verbose("Computing W");
-  elapsed_time(
+  _elapsed_time(
     pfp_sa_support pfp_sa(pf)
   );
 

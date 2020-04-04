@@ -80,7 +80,7 @@ public:
 
 
     verbose("Computing b_bwt and M of the parsing");
-    elapsed_time({
+    _elapsed_time({
       // Build the bitvector storing the position of the beginning of each phrase.
       b_bwt.resize(n);
       for(size_t i = 0; i < 3*64; ++i) b_bwt[i] = false; // bug in resize

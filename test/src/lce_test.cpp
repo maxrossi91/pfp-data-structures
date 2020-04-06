@@ -81,27 +81,6 @@ std::string test_file;
 TEST(lce_construct_test, paper_example)
 {
 
-    // std::vector<char> text = {'G','A','T','T','A','C','A','T','#','G',
-    //                           'A','T','A','C','A','T','#',
-    //                           'G','A','T','T','A','G','A','T','A','#','#'};
-    // std::vector<std::string> dict{"##GATTAC", "ACAT#", "AGATA##", "T#GATAC", "T#GATTAG"};
-    // std::vector<uint32_t> parse{1, 2, 4, 2, 5, 3, 0};
-    // std::vector<uint32_t> indices{0, 1, 2, 3, 4};
-    // std::vector<uint8_t> dict2 = {'#', '#', 'G', 'A', 'T', 'T', 'A', 'C', EndOfWord,
-    //                               'A', 'C', 'A', 'T', '#', EndOfWord,
-    //                               'A', 'G', 'A', 'T', 'A', '#', '#', EndOfWord,
-    //                               'T', '#', 'G', 'A', 'T', 'A', 'C', EndOfWord,
-    //                               'T', '#', 'G', 'A', 'T', 'T', 'A', 'G', EndOfWord, EndOfDict};
-    // sdsl::bit_vector b_d = {1, 0, 0, 0, 0, 0, 0, 0, 0,
-    //                         1, 0, 0, 0, 0, 0,
-    //                         1, 0, 0, 0, 0, 0, 0, 0,
-    //                         1, 0, 0, 0, 0, 0, 0, 0,
-    //                         1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    // const size_t n_phrases = 5;
-    // const std::vector<size_t> phrase_length{8, 5, 7, 7, 8}; 
-    
-    // std::vector<uint32_t> frequencies{0, 1, 2, 1, 1, 1};
-    // size_t w = 2;
     std::vector<char> text = {'G','A','T','T','A','C','A','T','#',
                               'G','A','T','A','C','A','T','#',
                               'G','A','T','T','A','G','A','T','A','#','#'};
@@ -202,32 +181,6 @@ TEST(lce_construct_test,lce_construct){
     read_fasta_file(test_file.c_str(), text);
     verbose("Text size: ", text.size());
 
-    // build lcp of the Text
-    // text.push_back(0);
-    // uint_t t_len = text.size();
-    // std::vector<uint_t> saT(t_len); //uint_t *saT = new uint_t[t_len];
-    // std::vector<int_t> lcpT(t_len); //int_t *lcpT = new int_t[t_len];
-
-    // verbose("Computing SA, ISA, and LCP of the text");
-    // // time_t  start = time(NULL);
-    // sacak(&text[0], &saT[0], t_len);
-
-    // // Computing isaT
-    // std::vector<uint_t> isaT(t_len); //uint_t *isaT = new uint_t[t_len];
-    // for (int i = 0; i < t_len; ++i)
-    // {
-    //     isaT[saT[i]] = i;
-    // }
-
-    // LCP_array(&text[0], isaT, saT, t_len, lcpT);
-    // verbose("Testing LCE ds");
-    // for (int i = 1; i < text.size() - 1; ++i)
-    // {
-    //     auto a = lce_ds.lce(saT[i], saT[i + 1]);
-    //     auto b = lcpT[i + 1];
-    //     EXPECT_EQ(a, b);
-    // }
-    
     uint8_t num_bytes = 1;
     // build cst of the Text
     verbose("Computing CSA of the text");

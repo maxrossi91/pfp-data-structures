@@ -56,7 +56,9 @@ public:
   bool rmq_lcp_D_flag = false;
 
 
+
   dictionary( std::vector<uint8_t>& d_,
+              size_t w,
               bool saD_flag_ = true,
               bool isaD_flag_ = true,
               bool daD_flag_ = true,
@@ -69,17 +71,26 @@ public:
 
   }
 
-  dictionary( std::string filename,
-              bool saD_flag_ = true,
-              bool isaD_flag_ = true,
-              bool daD_flag_ = true,
-              bool lcpD_flag_ = true,
-              bool rmq_lcp_D_flag_ = true )
+  dictionary(std::string filename,
+             size_t w,
+             bool saD_flag_ = true,
+             bool isaD_flag_ = true,
+             bool daD_flag_ = true,
+             bool lcpD_flag_ = true,
+             bool rmq_lcp_D_flag_ = true)
   {
     // Building dictionary from file
     std::string tmp_filename = filename + std::string(".dict");
     read_file(tmp_filename.c_str(), d);
     assert(d[0] == Dollar);
+    // Prepending w dollars to d
+    // 1. Count how many dollars there are
+    int i = 0;
+    int n_dollars = 0;
+    while(i < d.size() && d[i++] == Dollar)
+      ++n_dollars;
+    std::vector<uint8_t> dollars(w-n_dollars,Dollar);
+    d.insert(d.begin(), dollars.begin(),dollars.end());
 
     build(saD_flag_, isaD_flag_, daD_flag_, lcpD_flag_, rmq_lcp_D_flag_);
 

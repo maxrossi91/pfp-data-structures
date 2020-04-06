@@ -58,7 +58,7 @@ public:
              std::vector<uint32_t> &p_,
              std::vector<uint32_t> &freq_,
              size_t w_) : 
-            dict(d_),
+            dict(d_, w_),
             pars(p_, dict.n_phrases() + 1),
             freq(freq_),
             w(w_)
@@ -75,7 +75,7 @@ public:
   }
 
   pf_parsing( std::string filename, size_t w_):
-              dict(filename),
+              dict(filename, w_),
               pars(filename,dict.n_phrases()+1),
               freq(1,0),
               w(w_)

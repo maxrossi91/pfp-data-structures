@@ -11,4 +11,4 @@ add_executable(sdsl_baseline_csa sdsl_baseline_csa.cpp)
 target_link_libraries(sdsl_baseline_csa common sdsl divsufsort divsufsort64 malloc_count)
 
 add_executable(lce_test lce_test.cpp)
-target_link_libraries(lce_test common pfp gsacak sdsl malloc_count gtest_main pthread)
+target_link_libraries(lce_test common pfp gsacak sdsl divsufsort divsufsort64 malloc_count gtest_main pthread)

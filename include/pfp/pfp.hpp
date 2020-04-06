@@ -105,14 +105,15 @@ public:
       assert(pars.p[j] != 0);
       n += dict.length_of_phrase(pars.p[j]) - w;
     }
-    n += w - 1; // -1 is for the first dollar + w because n is the length including the last w markers
+    //n += w; // + w because n is the length including the last w markers
+    //n += w - 1; // Changed after changind b_d in dict // -1 is for the first dollar + w because n is the length including the last w markers
   }
 
   void build_b_bwt_and_M()
   {
     // Build the bitvector storing the position of the beginning of each phrase.
     b_bwt.resize(n);
-    for (size_t i = 0; i < 3 * 64; ++i)
+    for (size_t i = 0; i < b_bwt.size(); ++i)
       b_bwt[i] = false; // bug in resize
 
     assert(dict.d[dict.saD[0]] == EndOfDict);

@@ -65,6 +65,7 @@ public:
               d(d_)
   {
     build(saD_flag_, isaD_flag_, daD_flag_, lcpD_flag_, rmq_lcp_D_flag_);
+    //assert(d[0] == Dollar);
 
   }
 
@@ -78,6 +79,7 @@ public:
     // Building dictionary from file
     std::string tmp_filename = filename + std::string(".dict");
     read_file(tmp_filename.c_str(), d);
+    assert(d[0] == Dollar);
 
     build(saD_flag_, isaD_flag_, daD_flag_, lcpD_flag_, rmq_lcp_D_flag_);
 
@@ -96,7 +98,7 @@ public:
 
     // Building the bitvector with a 1 in each starting position of each phrase in D
     b_d.resize(d.size());
-    for(size_t i = 0; i < 3*64; ++i) b_d[i] = false; // bug in resize
+    for(size_t i = 0; i < b_d.size(); ++i) b_d[i] = false; // bug in resize
     b_d[0] = true; // Mark the first phrase
     for(int i = 1; i < d.size(); ++i )
       b_d[i] = (d[i-1]==EndOfWord);

@@ -25,6 +25,8 @@
 #ifndef _PFP_DICTIONARY_HH
 #define _PFP_DICTIONARY_HH
 
+#include <queue>
+
 #include <common.hpp>
 
 #include <sdsl/rmq_support.hpp>
@@ -185,31 +187,33 @@ public:
       // co-lex document array of the dictionary.
       verbose("Computing co-lex DA of dictionary");
       _elapsed_time(
-        {  
-          std::vector<uint_t>colex_id(n_phrases());
-          std::vector<uint_t>inv_colex_id(n_phrases()); // I am using it as starting positions
-          for(int i = 0, j = 0; i < d.size(); ++i )
-            if(d[i+1]==EndOfWord){
-              colex_id[j] = j;
-              inv_colex_id[j++] = i;
-            }
+        // {  
+        //   std::vector<uint_t>colex_id(n_phrases());
+        //   std::vector<uint_t>inv_colex_id(n_phrases()); // I am using it as starting positions
+        //   for(int i = 0, j = 0; i < d.size(); ++i )
+        //     if(d[i+1]==EndOfWord){
+        //       colex_id[j] = j;
+        //       inv_colex_id[j++] = i;
+        //     }
 
-          colex_document_array_helper(inv_colex_id,colex_id,0,n_phrases());
+        //   colex_document_array_helper(inv_colex_id,colex_id,0,n_phrases());
 
-          // computing inverse colex id
-          for(int i = 0; i < colex_id.size(); ++i){
-            inv_colex_id[colex_id[i]] = i;
-          }
-          colex_id.clear();
+        //   // computing inverse colex id
+        //   for(int i = 0; i < colex_id.size(); ++i){
+        //     inv_colex_id[colex_id[i]] = i;
+        //   }
+        //   colex_id.clear();
 
-          colex_daD.resize(d.size());
-          for(int i = 0; i < colex_daD.size(); ++i ){
-            colex_daD[i]  = inv_colex_id[daD[i]];
-          }
+        //   colex_daD.resize(d.size());
+        //   for(int i = 0; i < colex_daD.size(); ++i ){
+        //     colex_daD[i]  = inv_colex_id[daD[i]];
+        //   }
+        // }
+        {
+          compute_colex_da();
+          rmq_colex_daD = sdsl::rmq_succinct_sct<>(&colex_daD);
+          rMq_colex_daD = sdsl::range_maximum_sct<>::type(&colex_daD);
         }
-
-        rmq_colex_daD = sdsl::rmq_succinct_sct<>(&colex_daD);
-        rMq_colex_daD = sdsl::range_maximum_sct<>::type(&colex_daD);
       );
 
 
@@ -252,6 +256,86 @@ public:
       if(i > EndOfWord) colex_document_array_helper(sp,id,start,end);
       start = end;
     }
+
+  }
+
+  void compute_colex_da(){
+    std::vector<uint_t> colex_id(n_phrases());
+    std::vector<uint_t> inv_colex_id(n_phrases()); // I am using it as starting positions
+    for (int i = 0, j = 0; i < d.size(); ++i)
+      if (d[i + 1] == EndOfWord)
+      {
+        colex_id[j] = j;
+        inv_colex_id[j++] = i;
+      }
+
+    // buckets stores the begin and the end of each bucket.
+    std::queue<std::pair<int,int> > buckets;
+    // the first bucket is the whole array.
+    buckets.push({0,colex_id.size()});
+
+    // for each bucket
+    while(!buckets.empty()){
+      auto bucket = buckets.front(); buckets.pop();
+      int start = bucket.first;
+      int end = bucket.second;
+      if ((start < end) && (end - start > 1))
+      {
+        std::vector<uint32_t> count(256, 0);
+        for (size_t i = start; i < end; ++i)
+        {
+          count[d[inv_colex_id[i]]]++;
+        }
+
+        std::vector<uint32_t> psum(256, 0);
+        for (size_t i = 1; i < 256; ++i)
+        {
+          psum[i] = psum[i - 1] + count[i - 1];
+        }
+
+        std::vector<uint_t> tmp(end - start, 0);
+        std::vector<uint_t> tmp_id(end - start, 0);
+        for (size_t i = start; i < end; ++i)
+        {
+          size_t index = psum[d[inv_colex_id[i]]]++;
+          tmp[index] = std::min(inv_colex_id[i] - 1, static_cast<uint_t>(d.size() - 1));
+          tmp_id[index] = colex_id[i];
+        }
+
+        // Recursion
+        size_t tmp_start = 0;
+        for (size_t i = 0; i < 256; ++i)
+        {
+          for (size_t j = 0; j < count[i]; ++j)
+          {
+            inv_colex_id[start + j] = tmp[tmp_start];
+            colex_id[start + j] = tmp_id[tmp_start++];
+          }
+          end = start + count[i];
+          if (i > EndOfWord){
+            buckets.push({start, end});
+          }
+          start = end;
+        }
+      }
+
+    }
+
+    // computing inverse colex id
+    for (int i = 0; i < colex_id.size(); ++i)
+    {
+      inv_colex_id[colex_id[i]] = i;
+    }
+    colex_id.clear();
+
+    colex_daD.resize(d.size());
+    for (int i = 0; i < colex_daD.size(); ++i)
+    {
+      colex_daD[i] = inv_colex_id[daD[i]];
+    }
+    
+    return;
+
 
   }
 

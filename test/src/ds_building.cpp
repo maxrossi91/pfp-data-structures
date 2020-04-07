@@ -38,26 +38,31 @@ extern "C" {
 #include <lce_support.hpp>
 #include <sa_support.hpp>
 
+
 int main(int argc, char const *argv[]) {
 
-  // create_W_simple();
-  // return 0;
+  std::string usage("usage: " + std::string(argv[0]) + " infile [-w wsize]\n\n" +
+                    "Computes the pfp data structures of infile, provided that infile.parse, infile.dict, and infile.occ exists.\n" +
+                    " wsize: [integer] - sliding window size (def. 10)\n");
 
-  if(argc < 2)
-    error("input file required");
+  if(argc < 2 || argc == 3 || argc > 4)
+    error(usage);
 
   // Parse argv
+  std::string filename = argv[1];
+  
   size_t w = 10;
-  if(argc == 4 && argv[2] == "-w"){
-    w = std::stoi(argv[3]);
-  }else if(argc > 2){
-    error("Invalid number of arguments");
+  
+  if(argc == 4){
+    std::string opt(argv[2]);
+    if(opt == "-w") w = std::stoi(argv[3]);
+    else error(usage);
   }
 
+  verbose("Window size set to: " , w);
 
 
 
-  std::string filename = argv[1];
 
   pf_parsing pf(filename,w);
 

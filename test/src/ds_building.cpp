@@ -77,7 +77,6 @@ int main(int argc, char const *argv[]) {
   verbose("Parsing ISA size (bytes):      " , sizeof(pf.pars.isaP[0]) * pf.pars.isaP.size());
   verbose("Parsing LCP size (bytes):      " , sizeof(pf.pars.lcpP[0]) * pf.pars.lcpP.size());
 
-
   size_t n = pf.n;
 
   verbose("Providing LCE support");

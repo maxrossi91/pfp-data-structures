@@ -46,9 +46,19 @@ int main(int argc, char const *argv[]) {
   if(argc < 2)
     error("input file required");
 
+  // Parse argv
+  size_t w = 10;
+  if(argc == 4 && argv[2] == "-w"){
+    w = std::stoi(argv[3]);
+  }else if(argc > 2){
+    error("Invalid number of arguments");
+  }
+
+
+
+
   std::string filename = argv[1];
 
-  size_t w = 10;
   pf_parsing pf(filename,w);
 
   verbose("Dictionary size (bytes):       " , sizeof(pf.dict.d[0]) * pf.dict.d.size());

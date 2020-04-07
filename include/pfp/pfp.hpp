@@ -121,7 +121,7 @@ public:
     size_t j = 0;
     while (i < dict.saD.size())
     {
-      size_t left = j;
+      size_t left = i;
 
       auto sn = dict.saD[i];
       // Check if the suffix has length at least w and is not the complete phrase.
@@ -162,7 +162,7 @@ public:
         }
 
         // Computing M
-        size_t right = j - 1;
+        size_t right = i - 1;
         M_entry_t m;
         m.len = suffix_length;
         m.left = dict.colex_daD[dict.rmq_colex_daD(left, right)];

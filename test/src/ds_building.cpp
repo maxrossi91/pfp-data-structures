@@ -85,10 +85,10 @@ int main(int argc, char const *argv[]) {
     pfp_lce_support lce_ds(pf)
   );
 
-  verbose("Computing W");
-  _elapsed_time(
-    pfp_sa_support pfp_sa(pf)
-  );
+  // verbose("Computing W");
+  // _elapsed_time(
+  //   pfp_sa_support pfp_sa(pf)
+  // );
 
   // Building b_bwt
 

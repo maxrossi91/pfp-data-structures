@@ -70,7 +70,7 @@ int main(int argc, char const *argv[]) {
     std::cout << std::endl;
 
     // range_search_2d - test
-    const auto result = wt.range_search_2d(0, wt.size() - 1, 3, 4);
+    const auto result = wt.range_search_2d(0, wt.size() - 1, 3, 4, false);
 
     std::cout << "first: " << result.first << std::endl;
     for (const auto i : result.second) {

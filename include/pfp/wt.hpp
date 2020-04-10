@@ -115,10 +115,6 @@ public:
       const auto tres = alphabet_size / 2;
       const auto rank_bit_1 = t_node->bv_rank_1(j);
 
-      if (rank_bit_1 == 0) {
-        return 0;
-      }
-
       if (idx < tres) {
         // left child
         j -= rank_bit_1;
@@ -165,8 +161,8 @@ public:
     // t and b intervals of leafs
     // for each leaf from (t, b) - rank(i, c)
     size_t count = 0;
-    for (size_t i = t; i <= b; ++i) {
-      count += rank(i, alphabet[i]);
+    for (size_t j = t; j <= b; ++j) {
+      count += rank(i, alphabet[j]);
     }
 
     return count;
@@ -177,14 +173,17 @@ public:
     size_t hi = size();
     assert (r > 0 && r <= range_count(t, b, hi));
 
+    size_t ans = 0;
+
     // find r-th "filled column" in the interval (t, b)
     // binary search using rank_count
     while (lo <= hi) {
-      const size_t i = (lo + hi) / 2;
+      const size_t i = (lo + hi) >> 1;
       const size_t m = range_count(t, b, i);
 
       if (m == r) {
-        return i;
+        ans = i - 1;
+        hi = i - 1;
       }
 
       if (m < r)
@@ -193,7 +192,7 @@ public:
         hi = i - 1;
     }
 
-    return 0;
+    return ans;
   }
 
 private:

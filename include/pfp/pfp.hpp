@@ -29,6 +29,7 @@
 
 #include <sdsl/rmq_support.hpp>
 #include <sdsl/int_vector.hpp>
+#include <sdsl/wavelet_trees.hpp>
 extern "C" {
     #include<gsacak.h>
 }
@@ -53,9 +54,12 @@ public:
   size_t w; // Size of the window
 
   sdsl::bit_vector b_bwt;
+  sdsl::bit_vector::rank_1_type b_bwt_rank_1;
+  sdsl::bit_vector::select_1_type b_bwt_select_1;
   std::vector<M_entry_t> M;
 
   pfp_wt w_wt;
+  std::vector<uint32_t> C;
 
   pf_parsing(std::vector<uint8_t> &d_,
              std::vector<uint32_t> &p_,
@@ -75,6 +79,9 @@ public:
 
     verbose("Computing b_bwt and M of the parsing");
     _elapsed_time(build_b_bwt_and_M()); 
+
+    verbose("Computing W of BWT(P)");
+    _elapsed_time(build_W());
   }
 
   pf_parsing( std::string filename, size_t w_):
@@ -177,12 +184,16 @@ public:
         M.push_back(m);
       }
     }
+
+    // rank & select support for b_bwt
+    b_bwt_rank_1 = sdsl::bit_vector::rank_1_type(&b_bwt);
+    b_bwt_select_1 = sdsl::bit_vector::select_1_type(&b_bwt);
   }
 
   void build_W() {
     // create alphabet (phrases)
-    std::vector<uint32_t> alphabet(dict.n_phrases() + 1);
-    std::iota(alphabet.begin(), alphabet.end(), 0);
+    std::vector<uint32_t> alphabet(dict.n_phrases());
+    std::iota(alphabet.begin(), alphabet.end(), 1);
 
     // TODO: use existing co-lex sorted phrases
     auto co_lexi_dict_cmp = [&](const uint32_t i, const uint32_t j) {
@@ -198,19 +209,27 @@ public:
 
       return std::lexicographical_compare(i_r_begin, i_r_end, j_r_begin, j_r_end);
     };
-    std::sort(alphabet.begin() + 1, alphabet.end(), co_lexi_dict_cmp);
+    std::sort(alphabet.begin(), alphabet.end(), co_lexi_dict_cmp);
+
+    std::copy(alphabet.begin(), alphabet.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
+    std::cout << std::endl;
 
     // create BWT(P)
-    std::vector<uint32_t> bwt_p(pars.p.size(), 0);
-    for (size_t i = 0; i < pars.saP.size(); ++i) // TODO: shoud we count end symbol in this?
+    std::vector<uint32_t> bwt_p(pars.p.size() - 1, 0);
+    for (size_t i = 1; i < pars.saP.size(); ++i) // TODO: shoud we count end symbol in this?
     {
       if (pars.saP[i] > 0)
-        bwt_p[i] = pars.p[pars.saP[i] - 1];
+        bwt_p[i - 1] = pars.p[pars.saP[i] - 1];
       else
-        bwt_p[i] = pars.p[pars.saP.size() - 1]; // TODO: this should be -1 only if 0 stay in pars
+        bwt_p[i - 1] = pars.p[pars.saP.size() - 2]; // TODO: this should be -1 only if 0 stay in pars
     }
 
+    std::cout << "BWT(P): ";
+    std::copy(bwt_p.begin(), bwt_p.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
+    std::cout << std::endl;
+
     w_wt.construct(alphabet, bwt_p);
+    w_wt.print_leafs();
   }
 
 };

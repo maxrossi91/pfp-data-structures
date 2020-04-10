@@ -211,9 +211,6 @@ public:
     };
     std::sort(alphabet.begin(), alphabet.end(), co_lexi_dict_cmp);
 
-    std::copy(alphabet.begin(), alphabet.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
-    std::cout << std::endl;
-
     // create BWT(P)
     std::vector<uint32_t> bwt_p(pars.p.size() - 1, 0);
     for (size_t i = 1; i < pars.saP.size(); ++i) // TODO: shoud we count end symbol in this?
@@ -224,12 +221,12 @@ public:
         bwt_p[i - 1] = pars.p[pars.saP.size() - 2]; // TODO: this should be -1 only if 0 stay in pars
     }
 
-    std::cout << "BWT(P): ";
-    std::copy(bwt_p.begin(), bwt_p.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
-    std::cout << std::endl;
+    // std::cout << "BWT(P): ";
+    // std::copy(bwt_p.begin(), bwt_p.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
+    // std::cout << std::endl;
 
     w_wt.construct(alphabet, bwt_p);
-    w_wt.print_leafs();
+    // w_wt.print_leafs();
   }
 
 };

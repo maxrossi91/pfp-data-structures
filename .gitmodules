@@ -4,3 +4,6 @@
 [submodule "thirdparty/Big-BWT"]
 	path = thirdparty/Big-BWT
 	url = git@github.com:maxrossi91/Big-BWT.git
+[submodule "thirdparty/BT-CST"]
+	path = thirdparty/BT-CST
+	url = git@github.com:elarielcl/BT-CST.git

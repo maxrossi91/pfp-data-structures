@@ -98,7 +98,6 @@ public:
     return get_phrase_id(*root, i); // WT[] is 0-based
   }
 
-  // rank & select
   size_t rank(const size_t i, const uint32_t c) const {
     assert(i > 0 && i <= root->bit_vector.size());
 

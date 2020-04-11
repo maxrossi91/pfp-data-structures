@@ -218,15 +218,10 @@ public:
       if (pars.saP[i] > 0)
         bwt_p[i - 1] = pars.p[pars.saP[i] - 1];
       else
-        bwt_p[i - 1] = pars.p[pars.saP.size() - 2]; // TODO: this should be -1 only if 0 stay in pars
+        bwt_p[i - 1] = pars.p[pars.p.size() - 2]; // TODO: this should be -1 only if 0 stay in pars
     }
 
-    // std::cout << "BWT(P): ";
-    // std::copy(bwt_p.begin(), bwt_p.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
-    // std::cout << std::endl;
-
     w_wt.construct(alphabet, bwt_p);
-    // w_wt.print_leafs();
   }
 
 };

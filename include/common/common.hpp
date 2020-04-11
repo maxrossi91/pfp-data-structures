@@ -234,26 +234,44 @@ void read_fasta_file(const char *filename, std::vector<T>& v){
   verbose("Elapsed time (s): ",std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start ).count()); \
 }
 
-
-
-
 //*********************** Kasai et al. LCP construction algorithm ***************************************
 template<typename T, typename S, typename lcp_t>
 void LCP_array(S* s, const std::vector<T>& isa, const std::vector<T>& sa, size_t n, std::vector<lcp_t>& lcp){
-    lcp[0]  = 0;
+  lcp[0]  = 0;
 
-    T l = 0;
-    for (size_t i = 0; i < n; ++i){
-      // if i is the last character LCP is not defined
-      T k = isa[i];
-      if(k > 0){
-        T j = sa[k-1];
-        // I find the longest common prefix of the i-th suffix and the j-th suffix.
-        while(s[i+l] == s[j+l]) l++;
-        // l stores the length of the longest common prefix between the i-th suffix and the j-th suffix
-        lcp[k] = l;
-        if(l>0) l--;
-      }
+  T l = 0;
+  for (size_t i = 0; i < n; ++i){
+    // if i is the last character LCP is not defined
+    T k = isa[i];
+    if(k > 0){
+      T j = sa[k-1];
+      // I find the longest common prefix of the i-th suffix and the j-th suffix.
+      while(s[i+l] == s[j+l]) l++;
+      // l stores the length of the longest common prefix between the i-th suffix and the j-th suffix
+      lcp[k] = l;
+      if(l>0) l--;
     }
+  }
 }
+
+//*********************** Kasai et al. LCP construction algorithm rec text ***************************************
+template<typename T, typename S, typename lcp_t>
+void LCP_array_cyclic_text(S* s, const std::vector<T>& isa, const std::vector<T>& sa, size_t n, std::vector<lcp_t>& lcp){
+  lcp[0] = 0;
+
+  T l = 0;
+  for (size_t i = 0; i < n; ++i){
+    // if i is the last character LCP is not defined
+    T k = isa[i];
+    if(k > 0){
+      T j = sa[k-1];
+      // I find the longest common prefix of the i-th suffix and the j-th suffix.
+      while(l <= n && s[(i+l) % n] == s[(j+l) % n]) l++;
+      // l stores the length of the longest common prefix between the i-th suffix and the j-th suffix
+      lcp[k] = l;
+      if(l>0) l--;
+    }
+  }
+}
+
 #endif /* end of include guard: _COMMON_HH */

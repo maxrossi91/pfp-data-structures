@@ -80,7 +80,6 @@ std::string test_file;
 
 TEST(sa_construct_test, paper_example)
 {
-
     std::vector<char> text = {'G','A','T','T','A','C','A','T','#',
                               'G','A','T','A','C','A','T','#',
                               'G','A','T','T','A','G','A','T','A','#','#'};
@@ -108,6 +107,7 @@ TEST(sa_construct_test, paper_example)
         {6, {3, 3}}, {6, {4, 4}}, {2, {1, 1}}, {4, {0, 0}}, {3, {2, 3}},
         {3, {4, 4}}, {4, {3, 3}}, {4, {4, 4}}
     };
+    const std::vector<uint32_t> bwt_p = {3, 1, 4, 5, 2, 2};
 
     // Extract the reverse of the phrases
     std::vector<std::pair<std::string,uint32_t>> rev_dict;
@@ -125,10 +125,7 @@ TEST(sa_construct_test, paper_example)
     std::vector<uint32_t> frequencies{0, 1, 2, 1, 1, 1};
     size_t w = 2;
 
-
-
     TEST_COUT << "Begin paper test" << std::endl;
-
 
     pf_parsing pf(dict2,parse,frequencies, w);
     TEST_COUT << "Pfp built" << std::endl;
@@ -168,9 +165,7 @@ TEST(sa_construct_test, paper_example)
         EXPECT_EQ(pf.M[i].left, M[i].second.first) << "at position: " << i;
         EXPECT_EQ(pf.M[i].right, M[i].second.second) << "at position: " << i;
     }
-    TEST_COUT << "Test b_bwt" << std::endl;
-
-
+    TEST_COUT << "Test M" << std::endl;
 
     // TEST colex_document_array_helper
     std::vector<uint_t> colex_id(pf.dict.n_phrases());
@@ -186,39 +181,46 @@ TEST(sa_construct_test, paper_example)
     for (size_t i = 0; i < colex_id.size(); ++i){
         EXPECT_EQ(colex_id[i], rev_dict[i].second) << "at position: " << i;
     }
-
-
     TEST_COUT << "Test colex_document_array_helper" << std::endl;
 
-    // pfp_sa_support sa_ds(pf);
+    std::vector<uint32_t> sa(text.size(), 0);
+    std::iota(sa.begin(), sa.end(), 0);
+    auto cyclic_sort = [&](const size_t a, const size_t b) {
+        const auto max_cmp = text.size();
+        for (size_t i = 0; i < max_cmp; ++i) {
+            if (text[(a + i) % text.size()] != text[(b + i) % text.size()])
+                return text[(a + i) % text.size()] < text[(b + i) % text.size()];
+        }
+    };
+    std::sort(sa.begin(), sa.end(), cyclic_sort);
 
-    // // TEST b_p
-    // for (size_t i = 0; i < sa_ds.b_p.size(); ++i)
-    // {
-    //     EXPECT_EQ(sa_ds.b_p[i], b_p[i]) << "at position: " << i;
-    // }
-    // TEST_COUT << "Test b_p" << std::endl;
-    
-    
-    // // TEST sa_ds
-    // // build lcp of the Text
-    // uint8_t num_bytes = 1;
-    // // build cst of the Text
-    // verbose("Computing CSA of the text");
-    // sdsl::cache_config cc(false); // do not delete temp files after csa construction
-    // sdsl::csa_wt<> csa;
-    // sdsl::construct_im(csa, static_cast<const char *>(&text[0]), num_bytes);
+    pfp_lce_support lce_ds(pf);
+    pfp_sa_support pf_sa(pf, lce_ds);
 
-    // verbose("Computing LCP of the text");
-    // cc.delete_files = true; // delete temp files after lcp construction
-    // sdsl::lcp_wt<> lcp;
-    // sdsl::construct_im(lcp, static_cast<const char *>(&text[0]), num_bytes);
+    // TEST BWT(P) - wavelet tree
+    for (size_t i = 0; i < pf.w_wt.size(); ++i)
+    {
+        EXPECT_EQ(pf.w_wt[i], bwt_p[i]) << "at position: " << i;
+    }
+    TEST_COUT << "Test BWT(P)" << std::endl;
 
-    // verbose("Testing LCE ds");
-    // for (int i = 1; i < text.size() - 1; ++i)
-    // {
-    //     EXPECT_EQ(sa_ds.sa(csa[i], csa[i + 1]), lcp[i + 1]) << "At positions: " << csa[i] << " " << csa[i + 1];
-    // }
+    for (size_t i = 0; i < pf_sa.size(); ++i) {
+        EXPECT_EQ(pf_sa.sa(i), sa[i]) << "at position: " << i;
+    }
+    TEST_COUT << "Test PFP SA" << std::endl;
+
+    std::vector<uint32_t> isa(text.size(), 0);
+    std::vector<uint32_t> lcp(text.size(), 0);
+    for (size_t i = 0; i < sa.size(); ++i)
+        isa[sa[i]] = i;
+
+    LCP_array_rec_text(&text[0], isa, sa, text.size(), lcp);
+
+    verbose("Testing LCE ds");
+    for (int i = 1; i < text.size() - 1; ++i)
+    {
+        EXPECT_EQ(lce_ds.lce(pf_sa.sa(i), pf_sa.sa(i + 1)), lcp[i + 1]) << "At positions: " << pf_sa.sa(i) << " " << pf_sa.sa(i + 1);
+    }
 }
 
 // TEST(sa_construct_test,sa_construct){
@@ -251,10 +253,7 @@ TEST(sa_construct_test, paper_example)
 //         auto b = lcp[i + 1];
 //         EXPECT_EQ(a, b);
 //     }
-
 // }
-
-
 
 int main(int argc, char **argv)
 {

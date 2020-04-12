@@ -36,3 +36,17 @@ add_subdirectory(sdsl-lite)
 target_include_directories(divsufsort PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/sdsl-lite/external/libdivsufsort/include")
 target_include_directories(divsufsort64 PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/sdsl-lite/external/libdivsufsort/include")
 target_include_directories(gtest_main PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/sdsl-lite/external/googletest/include")
+
+
+## Add BT-CST
+set(BT-CST_cmake_file ${CMAKE_CURRENT_LIST_DIR}/BT-CST/CMakeLists.txt)
+if(NOT EXISTS ${BT-CST_cmake_file})
+    EXECUTE_PROCESS(COMMAND git submodule update --init thirdparty/BT-CST
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/..
+                    OUTPUT_QUIET
+            )
+endif(NOT EXISTS ${BT-CST_cmake_file})
+
+add_subdirectory(BT-CST)
+
+target_include_directories(blocktree PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/BT-CST/include")

@@ -154,20 +154,58 @@ public:
     return root->bit_vector.size();
   }
 
-  size_t range_count(const size_t t, const size_t b, const size_t i) {
+  size_t range_count (const size_t t, const size_t b, const size_t i) {
     assert(i > 0 && i <= root->bit_vector.size());
 
     // t and b intervals of leafs
     // for each leaf from (t, b) - rank(i, c)
+    const auto count_b = range_count_2d(alphabet[b], i);
+  
+    if (t >= 1)
+      return count_b - range_count_2d(alphabet[t - 1], i);
+    
+    return count_b;
+  }
+
+  size_t range_count_2d (const size_t t, const size_t i) {
+    assert(i > 0 && i <= root->bit_vector.size());
+
+    wt_node * node = std::addressof(*root);
+    const size_t alphabet_index = leafs.at(t).alphabet_index;
+    size_t alphabet_start = 0;
+    size_t alphabet_size = alphabet.size();
+
     size_t count = 0;
-    for (size_t j = t; j <= b; ++j) {
-      count += rank(i, alphabet[j]);
+    size_t j = i;
+    size_t rank_j = 0;
+
+    while (!node->is_leaf()) {
+      const auto idx = alphabet_index - alphabet_start;
+      const auto tres = alphabet_size / 2;
+      rank_j = node->bv_rank_1(j);
+
+      if (idx < tres) {
+        j -= rank_j;
+        alphabet_size = tres;
+        node = std::addressof(*node->left);
+      }
+      else {
+        // all 0s add towards count
+        count += j - rank_j;
+
+        j = rank_j;
+        alphabet_size -= tres;
+        alphabet_start += tres;
+        node = std::addressof(*node->right);
+      }
     }
+    // + case when we arrived to leaf
+    count += j;
 
     return count;
   }
 
-  size_t range_select(const size_t t, const size_t b, const size_t r) {
+  size_t range_select (const size_t t, const size_t b, const size_t r) {
     size_t lo = 1;
     size_t hi = size();
     assert (r > 0 && r <= range_count(t, b, hi));
@@ -194,10 +232,10 @@ public:
     return ans;
   }
 
+  std::vector<uint32_t> alphabet;
 private:
   // root node of wavelet tree
   std::unique_ptr<wt_node> root;
-  std::vector<uint32_t> alphabet;
   std::map<uint32_t, leaf_info> leafs;
 
   uint32_t get_phrase_id(const wt_node & node, const size_t i) {

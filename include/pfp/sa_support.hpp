@@ -35,9 +35,9 @@
 #include <lce_support.hpp>
 
 class pfp_sa_support {
-protected:
-  pf_parsing& pfp;
 public:
+  pf_parsing& pfp;
+
   pfp_sa_support(pf_parsing & pfp_)
     : pfp(pfp_)
   { }

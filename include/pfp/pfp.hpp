@@ -223,23 +223,9 @@ public:
   void build_W() {
     // create alphabet (phrases)
     std::vector<uint32_t> alphabet(dict.n_phrases());
-    std::iota(alphabet.begin(), alphabet.end(), 1);
-
-    // TODO: use existing co-lex sorted phrases
-    auto co_lexi_dict_cmp = [&](const uint32_t i, const uint32_t j) {
-      auto i_start = dict.select_b_d(i);
-      auto i_end = i_start + dict.length_of_phrase(i) - 1;
-      auto j_start = dict.select_b_d(j);
-      auto j_end = j_start + dict.length_of_phrase(j) - 1;
-
-      auto i_r_begin = dict.d.rend() - i_end - 1;
-      auto i_r_end = dict.d.rend() - i_start;
-      auto j_r_begin = dict.d.rend() - j_end - 1;
-      auto j_r_end = dict.d.rend() - j_start;
-
-      return std::lexicographical_compare(i_r_begin, i_r_end, j_r_begin, j_r_end);
-    };
-    std::sort(alphabet.begin(), alphabet.end(), co_lexi_dict_cmp);
+    for (size_t i = 0; i < dict.n_phrases(); ++i) {
+      alphabet[i] = dict.colex_id[i] + 1;
+    }
 
     // create BWT(P)
     std::vector<uint32_t> bwt_p(pars.p.size() - 1, 0);

@@ -56,8 +56,8 @@ public:
   bool daD_flag = false;
   bool lcpD_flag = false;
   bool rmq_lcp_D_flag = false;
-
-
+  
+  std::vector<uint_t> colex_id;
 
   dictionary( std::vector<uint8_t>& d_,
               size_t w,
@@ -260,7 +260,7 @@ public:
   }
 
   void compute_colex_da(){
-    std::vector<uint_t> colex_id(n_phrases());
+    colex_id.resize(n_phrases());
     std::vector<uint_t> inv_colex_id(n_phrases()); // I am using it as starting positions
     for (int i = 0, j = 0; i < d.size(); ++i)
       if (d[i + 1] == EndOfWord)

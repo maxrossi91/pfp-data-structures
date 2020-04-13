@@ -194,6 +194,7 @@ TEST(sa_construct_test, paper_example)
     };
     std::sort(sa.begin(), sa.end(), cyclic_sort);
 
+    pfp_lce_support lce_ds(pf);
     pfp_sa_support pf_sa(pf);
 
     // TEST BWT(P) - wavelet tree

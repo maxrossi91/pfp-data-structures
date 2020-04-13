@@ -37,7 +37,6 @@
 class pfp_sa_support {
 protected:
   pf_parsing& pfp;
-  pfp_lce_support& lce_support;
 public:
   pfp_sa_support(pf_parsing & pfp_)
     : pfp(pfp_)

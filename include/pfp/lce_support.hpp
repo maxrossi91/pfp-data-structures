@@ -37,37 +37,10 @@ protected:
 public:
   pf_parsing& pfp;
 
-  sdsl::bit_vector b_p; // Starting sdsl::bit_vector::rank_1_type rank_b_p;rank_b_p::bit_vector::select_1_type select_b_p;
-  sdsl::bit_vector::rank_1_type rank_b_p;
-  sdsl::bit_vector::select_1_type select_b_p;
-
-
-
   // This has to be changed using pfp_dictionary and pfp_parse
   pfp_lce_support(pf_parsing& pfp_):
-                    pfp(pfp_),
-                    b_p(pfp.n,0)
-  { //
-
-    // Build the bitvector storing the position of the beginning of each phrase.
-    b_p.resize(pfp.n); // all should be initialized at false by sdsl
-    for(size_t i = 0; i < b_p.size(); ++i) b_p[i] = false; // bug in resize
-    b_p[0] = true; // phrase_0 becomes phrase 1
-    size_t i = 0;
-    for(int j = 0; j < pfp.pars.p.size()-2; ++j){ // -2 because the beginning of the last phrase is in position 0
-      // p[i]: phrase_id
-      assert(pfp.pars.p[j] != 0);
-      // phrase_length: select_b_d(p[i]+1)-select_b_d(p[i]);
-      i += pfp.dict.length_of_phrase(pfp.pars.p[j]) - pfp.w;
-      b_p[i] = true;
-    }
-//    b_p[n] = true; // We set the last phrase beginning in the last w characters of the string
-
-
-    // Build rank and select on Sp
-    rank_b_p = sdsl::bit_vector::rank_1_type(&b_p);
-    select_b_p = sdsl::bit_vector::select_1_type(&b_p);
-  }
+                    pfp(pfp_)
+  { }
 
   // return the longest common prefix of suffix i and j of T
   size_t lce(size_t i, size_t j){
@@ -80,8 +53,8 @@ public:
       return pfp.n-i;
 
     // find the phrases of which i and j belongs to
-    size_t p_i = rank_b_p(i+1);// - 1; // rank of the phrase in T that i belongs to. Span: [1..|P|]
-    size_t p_j = rank_b_p(j+1);// - 1; // rank of the phrase in T that j belongs to. Span: [1..|P|]
+    size_t p_i = pfp.rank_b_p(i+1);// - 1; // rank of the phrase in T that i belongs to. Span: [1..|P|]
+    size_t p_j = pfp.rank_b_p(j+1);// - 1; // rank of the phrase in T that j belongs to. Span: [1..|P|]
     // NOTE: i+1 since rank return the number of 1s in v[0..i-1]
 
 
@@ -89,18 +62,18 @@ public:
     auto id_p_i = pfp.pars.p[p_i - 1]; // phrase_id of the phrase that i belongs to.
     auto id_p_j = pfp.pars.p[p_j - 1]; // phrase_id of the phrase that j belongs to.
 
-    auto tmp_s_pi = select_b_p(p_i);
-    auto tmp_s_pj = select_b_p(p_j);
+    auto tmp_s_pi = pfp.select_b_p(p_i);
+    auto tmp_s_pj = pfp.select_b_p(p_j);
     // find the length of the suffixes iof id_p_i and id_p_j starting at i and j
     // Length of the phrrase - length of the prefix.
-    size_t len_suff_i_in_p_i = pfp.dict.length_of_phrase(id_p_i) - (i - select_b_p(p_i));// + 1);
-    size_t len_suff_j_in_p_j = pfp.dict.length_of_phrase(id_p_j) - (j - select_b_p(p_j));// + 1);
+    size_t len_suff_i_in_p_i = pfp.dict.length_of_phrase(id_p_i) - (i - pfp.select_b_p(p_i));// + 1);
+    size_t len_suff_j_in_p_j = pfp.dict.length_of_phrase(id_p_j) - (j - pfp.select_b_p(p_j));// + 1);
     size_t k = std::min(len_suff_i_in_p_i,len_suff_j_in_p_j);
 
      // find the occurrence of i and j in the concatenation of the phrases of D
      // Starting position of the phrase in D + length of the prefix.
-     size_t occ_in_p_i_in_D = pfp.dict.select_b_d(id_p_i) + (i - select_b_p(p_i));
-     size_t occ_in_p_j_in_D = pfp.dict.select_b_d(id_p_j) + (j - select_b_p(p_j));
+     size_t occ_in_p_i_in_D = pfp.dict.select_b_d(id_p_i) + (i - pfp.select_b_p(p_i));
+     size_t occ_in_p_j_in_D = pfp.dict.select_b_d(id_p_j) + (j - pfp.select_b_p(p_j));
 
      // compute the LCP of the suffix up to the phrase boundaries.
      auto lcp_ppi_ppj = 0;
@@ -134,7 +107,7 @@ public:
        // #               print(p_i + 1 + l)
        // l_com_phrases += len(self.D[self.P[p_i + 1 + l]]) - w
 
-       size_t l_com_phrases = select_b_p(p_i + 1 + lcp_pi_pj) - select_b_p(p_i + 1); // Check if there is some error it might be here
+       size_t l_com_phrases = pfp.select_b_p(p_i + 1 + lcp_pi_pj) - pfp.select_b_p(p_i + 1); // Check if there is some error it might be here
 
 
        auto a = pfp.pars.p[p_i + lcp_pi_pj]; // p is 0-based
@@ -156,11 +129,7 @@ public:
 
        return k + l_com_phrases + lcp_a_b;
      }
-
-
-
   }
-
 };
 
 #endif /* end of include guard: _PFP_LCE_SUPPORT_HH */

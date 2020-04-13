@@ -194,8 +194,7 @@ TEST(sa_construct_test, paper_example)
     };
     std::sort(sa.begin(), sa.end(), cyclic_sort);
 
-    pfp_lce_support lce_ds(pf);
-    pfp_sa_support pf_sa(pf, lce_ds);
+    pfp_sa_support pf_sa(pf);
 
     // TEST BWT(P) - wavelet tree
     for (size_t i = 0; i < pf.w_wt.size(); ++i)
@@ -214,7 +213,7 @@ TEST(sa_construct_test, paper_example)
     for (size_t i = 0; i < sa.size(); ++i)
         isa[sa[i]] = i;
 
-    LCP_array_rec_text(&text[0], isa, sa, text.size(), lcp);
+    LCP_array_cyclic_text(&text[0], isa, sa, text.size(), lcp);
 
     verbose("Testing LCE ds");
     for (int i = 1; i < text.size() - 1; ++i)

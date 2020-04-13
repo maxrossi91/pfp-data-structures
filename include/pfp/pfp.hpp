@@ -59,7 +59,10 @@ public:
   std::vector<M_entry_t> M;
 
   pfp_wt w_wt;
-  std::vector<uint32_t> C;
+
+  sdsl::bit_vector b_p;
+  sdsl::bit_vector::rank_1_type rank_b_p;
+  sdsl::bit_vector::select_1_type select_b_p;
 
   pf_parsing(std::vector<uint8_t> &d_,
              std::vector<uint32_t> &p_,
@@ -70,12 +73,14 @@ public:
             freq(freq_),
             w(w_)
   {
-
     // Uploading the frequency file
     assert(freq[0] == 0);
 
     // Compute the length of the string;
     compute_n();
+
+    verbose("Computing b_p");
+    _elapsed_time(compute_b_p());
 
     verbose("Computing b_bwt and M of the parsing");
     _elapsed_time(build_b_bwt_and_M()); 
@@ -90,7 +95,6 @@ public:
               freq(1,0),
               w(w_)
   {
-
     // Uploading the frequency file
     uint32_t *occ;
     size_t d_words;
@@ -102,11 +106,37 @@ public:
     // Compute the length of the string;
     compute_n();
 
+    // b_p(pfp.n,0);
+    verbose("Computing b_p");
+    _elapsed_time(compute_b_p());
+
     verbose("Computing b_bwt and M of the parsing");
     _elapsed_time(build_b_bwt_and_M());
 
     verbose("Computing W of BWT(P)");
     _elapsed_time(build_W());
+  }
+
+  void compute_b_p() {
+    // Build the bitvector storing the position of the beginning of each phrase.
+    b_p.resize(this->n); // all should be initialized at false by sdsl
+    for(size_t i = 0; i < b_p.size(); ++i)
+      b_p[i] = false; // bug in resize
+    b_p[0] = true; // phrase_0 becomes phrase 1
+    
+    size_t i = 0;
+    
+    for(int j = 0; j < pars.p.size()-2; ++j){ // -2 because the beginning of the last phrase is in position 0
+      // p[i]: phrase_id
+      assert(pars.p[j] != 0);
+      // phrase_length: select_b_d(p[i]+1)-select_b_d(p[i]);
+      i += dict.length_of_phrase(pars.p[j]) - w;
+      b_p[i] = true;
+    }
+
+    // Build rank and select on Sp
+    rank_b_p = sdsl::bit_vector::rank_1_type(&b_p);
+    select_b_p = sdsl::bit_vector::select_1_type(&b_p);
   }
 
   void compute_n(){

@@ -39,8 +39,8 @@ protected:
   pf_parsing& pfp;
   pfp_lce_support& lce_support;
 public:
-  pfp_sa_support(pf_parsing & pfp_, pfp_lce_support & lce_support)
-    : pfp(pfp_), lce_support(lce_support)
+  pfp_sa_support(pf_parsing & pfp_)
+    : pfp(pfp_)
   { }
 
   size_t size() const {
@@ -68,7 +68,7 @@ public:
     if (p_i + 2 > pfp.pars.p.size() - 1)
       occ_k_next = pfp.n;
     else
-      occ_k_next = lce_support.select_b_p(p_i + 2); // start of next phrase in S
+      occ_k_next = pfp.select_b_p(p_i + 2); // start of next phrase in S
 
     if (occ_k_next < m.len)
       return pfp.n - (m.len - occ_k_next);

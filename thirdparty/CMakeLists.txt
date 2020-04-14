@@ -1,26 +1,28 @@
-## Add Big-BWT
-set(Big-BWT_cmake_file ${CMAKE_CURRENT_LIST_DIR}/Big-BWT/CMakeLists.txt)
-if(NOT EXISTS ${Big-BWT_cmake_file})
-    EXECUTE_PROCESS(COMMAND git submodule update --init thirdparty/Big-BWT
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/..
-                    OUTPUT_QUIET
-            )
-endif(NOT EXISTS ${Big-BWT_cmake_file})
-
-add_subdirectory(Big-BWT)
-
-add_library(gsacak OBJECT Big-BWT/gsa/gsacak.c Big-BWT/gsa/gsacak.h)
-target_include_directories(gsacak PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/Big-BWT/gsa")
-configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/Big-BWT/gsa/gsacak.h" "${CMAKE_CURRENT_BINARY_DIR}/Big-BWT/gsa/gsacak.h" COPYONLY )
-
-add_library(malloc_count OBJECT Big-BWT/malloc_count.c Big-BWT/malloc_count.h)
-target_link_libraries(malloc_count dl)
-target_include_directories(malloc_count PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/Big-BWT")
-configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/Big-BWT/malloc_count.h" "${CMAKE_CURRENT_BINARY_DIR}/Big-BWT/malloc_count.h" COPYONLY )
-
-
 include(FetchContent)
 
+## Add Big-BWT
+FetchContent_Declare(
+  bigbwt
+  GIT_REPOSITORY https://github.com/alshai/Big-BWT.git
+  )
+  
+FetchContent_GetProperties(bigbwt)
+if(NOT bigbwt_POPULATED)
+  FetchContent_Populate(bigbwt)
+  add_subdirectory(${bigbwt_SOURCE_DIR} ${bigbwt_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+  add_library(gsacak OBJECT ${bigbwt_SOURCE_DIR}/gsa/gsacak.c ${bigbwt_SOURCE_DIR}/gsa/gsacak.h)
+  target_include_directories(gsacak PUBLIC "${bigbwt_SOURCE_DIR}/gsa")
+  
+  add_library(malloc_count OBJECT ${bigbwt_SOURCE_DIR}/malloc_count.c ${bigbwt_SOURCE_DIR}/malloc_count.h)
+  target_link_libraries(malloc_count dl)
+  target_include_directories(malloc_count PUBLIC "${bigbwt_SOURCE_DIR}")
+
+endif()
+
+
+
+## Google benchmark
 FetchContent_Declare(
   benchmark
   GIT_REPOSITORY https://github.com/google/benchmark.git

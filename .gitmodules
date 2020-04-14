@@ -1,0 +1,3 @@
+[submodule "thirdparty/Big-BWT"]
+	path = thirdparty/Big-BWT
+	url = git@github.com:alshai/Big-BWT.git

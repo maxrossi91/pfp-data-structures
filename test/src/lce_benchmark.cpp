@@ -39,6 +39,9 @@ extern "C" {
     #include<gsacak.h>
 }
 
+// // BT-CST
+// #include <compressed/PBTRLCSACST.h>
+
 #include <benchmark/benchmark.h>
 
 // std::string test_file = "../data/yeast.fasta";
@@ -177,5 +180,32 @@ static void BM_sdsl_lcp_queries(benchmark::State &state)
 }
 // Register the function as a benchmark
 BENCHMARK(BM_sdsl_lcp_queries);
+
+
+// static void BM_bt_cst_lcp_queries(benchmark::State &state)
+// {
+//     // Perform setup here
+//     std::vector<char> text;
+//     read_fasta_file(test_file.c_str(), text);
+
+//     uint8_t num_bytes = 1;
+//     int r = 2;     //The arity of the BlockTree
+//     int mll = 128; // The max length that a BlockTree's leaf could represent
+
+//     PBTRLCSACST *cst = new PBTRLCSACST(text, PBTRLCSACST.PAPER, r, mll, c);
+
+//     state.counters.insert({{"size in B", 0}, {"nops", cst->lcp_rlcsa_.size() - 1}});
+//     verbose("Initialization bt-cst done");
+//     for (auto _ : state)
+//     {
+//         // This code gets timed
+//         for (int i = 1; i < cst->lcp_rlcsa_.size(); ++i)
+//             benchmark::DoNotOptimize(cst->lcp_rlcsa_[i]);
+//     }
+//     verbose("Queries done");
+// }
+// // Register the function as a benchmark
+// BENCHMARK(BM_sdsl_lcp_queries);
+
 // Run the benchmark
 BENCHMARK_MAIN();

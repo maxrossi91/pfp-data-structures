@@ -26,6 +26,7 @@
 #define VERBOSE
 
 #include <common.hpp>
+#include <pfp/wt.hpp>
 
 #include <sdsl/rmq_support.hpp>
 #include <sdsl/int_vector.hpp>
@@ -374,6 +375,7 @@ public:
 
 };
 
+
 class pf_parsing{
 public:
   struct M_entry_t{
@@ -391,6 +393,8 @@ public:
 
   sdsl::bit_vector b_bwt;
   std::vector<M_entry_t> M;
+
+  pfp_wt w_wt;
 
   pf_parsing( std::string filename, size_t w_):
               dict(filename),
@@ -467,12 +471,42 @@ public:
           M.push_back(m);
         }
       }
-
-
     }); /// End elapsed_time
 
-  }
+    // Add W wavelet tree
+    verbose("Computing W of BWT(P)");
+    // create alphabet (phrases)
+    std::vector<uint32_t> alphabet(dict.n_phrases());
+    std::iota(alphabet.begin(), alphabet.end(), 1);
 
+    // TODO: use existing co-lex sorted phrases
+    auto co_lexi_dict_cmp = [&](const uint32_t i, const uint32_t j) {
+      auto i_start = dict.select_b_d(i);
+      auto i_end = i_start + dict.length_of_phrase(i) - 1;
+      auto j_start = dict.select_b_d(j);
+      auto j_end = j_start + dict.length_of_phrase(j) - 1;
+
+      auto i_r_begin = dict.d.rend() - i_end - 1;
+      auto i_r_end = dict.d.rend() - i_start;
+      auto j_r_begin = dict.d.rend() - j_end - 1;
+      auto j_r_end = dict.d.rend() - j_start;
+
+      return std::lexicographical_compare(i_r_begin, i_r_end, j_r_begin, j_r_end);
+    };
+    std::sort(alphabet.begin(), alphabet.end(), co_lexi_dict_cmp);
+
+    // create BWT(P)
+    std::vector<uint32_t> bwt_p(pars.p.size(), 0);
+    for (size_t i = 0; i < pars.p.size(); ++i)
+    {
+      if (pars.saP[i] > 0)
+        bwt_p[i] = pars.p[pars.saP[i] - 1];
+      else
+        bwt_p[i] = pars.p[pars.saP.size() - 1 - 1];
+    }
+
+    w_wt.construct(alphabet, bwt_p);
+  }
 };
 
 
@@ -660,139 +694,14 @@ sdsl::bit_vector compute_B_BWT(
       return b_bwt;
 }
 
-class pfp_wt {
-public:
-  using wt_bv = sdsl::bit_vector;
-  struct wt_node {
-    wt_bv bit_vector;
-    wt_bv::rank_1_type bv_rank;
-    wt_bv::select_1_type bv_select;
-
-    uint32_t phrase_id;
-
-    std::unique_ptr<wt_node> left;
-    std::unique_ptr<wt_node> right;
-
-    bool is_leaf () {
-      return !left.get();
-    }
-  };
-
-  pfp_wt()
-    : root(new wt_node())
-  { }
-
-  pfp_wt(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse)
-    : root(new wt_node()) {
-    verbose("Construction of WT of P");
-    create_bwt_rec(*root, sorted_alphabet, parse);
-  }
-
-  void construct(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse) {
-    verbose("Construction of WT of P");
-    create_bwt_rec(*root, sorted_alphabet, parse);
-  }
-
-  // public interface
-  void print_leafs() {
-    print_leafs_rec(root);
-    std::cout << std::endl;
-  }
-
-  // rank, select
-
-private:
-  // root node of wavelet tree
-  std::unique_ptr<wt_node> root;
-
-  void create_bwt_rec(wt_node & w_structure, const std::vector<uint32_t> & alphabet, const std::vector<uint32_t> & parse) {
-    // divide alphabet to two sets
-    const uint32_t tres = alphabet.size() / 2;
-    if (tres == 0) {
-      // leaf
-      w_structure.phrase_id = alphabet[0];
-
-      return;
-    }
-
-    // create bit_vector
-    w_structure.bit_vector.resize(parse.size());
-    std::vector<uint32_t> parse_left;
-    std::vector<uint32_t> parse_right;
-
-    // std::cout << "> Creating bit vector" << std::endl;
-    for (size_t i = 0; i < parse.size(); i++) {
-      // TODO: direct access data structure
-      const auto iter = std::find(alphabet.begin(), alphabet.end(), parse[i]);
-      const auto idx = std::distance(alphabet.begin(), iter);
-
-      if (idx < tres) {
-        w_structure.bit_vector[i] = 0;
-        parse_left.push_back(parse[i]);
-      }
-      else {
-        w_structure.bit_vector[i] = 1;
-        parse_right.push_back(parse[i]);
-      }
-    }
-
-    // rank & select support
-    w_structure.bv_rank = wt_bv::rank_1_type(&w_structure.bit_vector);
-    w_structure.bv_select = wt_bv::select_1_type(&w_structure.bit_vector);
-
-    w_structure.left = std::unique_ptr<wt_node>(new wt_node());
-    w_structure.right = std::unique_ptr<wt_node>(new wt_node());
-
-    create_bwt_rec(*(w_structure.left), std::vector<uint32_t>(alphabet.begin(), alphabet.begin() + tres), parse_left);
-    create_bwt_rec(*(w_structure.right), std::vector<uint32_t>(alphabet.begin() + tres, alphabet.end()), parse_right);
-  }
-
-  void print_leafs_rec(const std::unique_ptr<wt_node> & node) {
-    if (node->is_leaf()) {
-      std::cout << node->phrase_id << " | ";
-    }
-    else {
-      print_leafs_rec(node->left);
-      print_leafs_rec(node->right);
-    }
-  }
-};
-
 class pfp_sa {
 protected:
   pf_parsing& pfp;
-
-  pfp_wt wt;
 public:
   pfp_sa(pf_parsing & pfp_)
     : pfp(pfp_)
   {
-    verbose("Creating PFP SA data structure");
-    // create alphabet (phrases)
-    std::vector<uint32_t> alphabet(pfp.dict.n_phrases());
-    std::iota(alphabet.begin(), alphabet.end(), 1);
-
-    // sort alphabet based on co-lexicographical order of phrases
-    // pfp.pars.p - seq of phrase ids
-    // pfp.dict.b_d
-    // co-lexi compare function
-    auto co_lexi_dict_cmp = [&](const uint32_t i, const uint32_t j) {
-      auto i_start = pfp.dict.select_b_d(i);
-      auto i_end = i_start + pfp.dict.length_of_phrase(i) - 1;
-      auto j_start = pfp.dict.select_b_d(j);
-      auto j_end = j_start + pfp.dict.length_of_phrase(j) - 1;
-
-      auto i_r_begin = pfp.dict.d.rend() - i_end - 1;
-      auto i_r_end = pfp.dict.d.rend() - i_start;
-      auto j_r_begin = pfp.dict.d.rend() - j_end - 1;
-      auto j_r_end = pfp.dict.d.rend() - j_start;
-
-      return std::lexicographical_compare(i_r_begin, i_r_end, j_r_begin, j_r_end);
-    };
-    std::sort(alphabet.begin(), alphabet.end(), co_lexi_dict_cmp);
-
-    wt.construct(alphabet, pfp.pars.p);
-    // wt.print_leafs();
+    
   }
 };
 
@@ -800,8 +709,8 @@ public:
 //  - Rozdeleni alphabet je potreba kontrolovat na pritomnost v te konkretni casti alphabety
 void create_W_simple() {
   std::vector<std::string> dict {"##GATTAC", "ACAT#", "AGATA##", "T#GATAC", "T#GATTAG"};
-  std::vector<uint32_t> parse {0, 1, 3, 1, 4, 2};
-  std::vector<uint32_t> indices {0, 1, 2, 3, 4};
+  std::vector<uint32_t> parse {1, 2, 4, 2, 5, 3};
+  std::vector<uint32_t> indices {1, 2, 3, 4, 5};
 
   std::vector<uint8_t> dict2 = {'#', '#', 'G', 'A', 'T', 'T', 'A', 'C', EndOfWord,
                                 'A', 'C', 'A', 'T', '#', EndOfWord,
@@ -821,44 +730,52 @@ void create_W_simple() {
   const std::vector<size_t> phrase_length {8, 5, 7, 7, 8};
 
   // co-lexi compare function
-  auto co_lexi_dict_cmp = [&](const uint32_t & i, const uint32_t & j) -> bool {
-    // compare i-th phrase with j-th phrase
-    // get start and end of phrases
-    auto i_start = select_b_d(i + 1);
-    auto i_end = i_start + phrase_length[i] - 1;
-    auto j_start = select_b_d(j + 1);
-    auto j_end = j_start + phrase_length[j] - 1;
+  auto co_lexi_dict_cmp = [&](const uint32_t i, const uint32_t j) {
+    auto i_start = select_b_d(i);
+    auto i_end = i_start + phrase_length[i - 1] - 1;
+    auto j_start = select_b_d(j);
+    auto j_end = j_start + phrase_length[j - 1] - 1;
 
-    std::cout << "------------- i: " << i << " j: " << j << std::endl
-              << "i_s: " << i_start << " | i_e: " << i_end << std::endl
-              << "j_s: " << j_start << " | j_e: " << j_end << std::endl;
-
-    auto i_r_begin = dict2.rend() - i_end - 1; // remove i EndOfWords
+    auto i_r_begin = dict2.rend() - i_end - 1;
     auto i_r_end = dict2.rend() - i_start;
     auto j_r_begin = dict2.rend() - j_end - 1;
     auto j_r_end = dict2.rend() - j_start;
-    std::cout << "> comparing" << std::endl
-              << "  - ";
-    std::copy(i_r_begin, i_r_end, std::ostream_iterator<uint8_t>(std::cout, ""));
-    std::cout << std::endl
-              << "  - ";
-    std::copy(j_r_begin, j_r_end, std::ostream_iterator<uint8_t>(std::cout, ""));
-    std::cout << std::endl;
 
     return std::lexicographical_compare(i_r_begin, i_r_end, j_r_begin, j_r_end);
   };
   std::sort(indices.begin(), indices.end(), co_lexi_dict_cmp);
 
   std::cout << "0: " << select_b_d(1) << " | 1: " << select_b_d(2) << std::endl;
-  std::cout << "last: " << select_b_d(5) << " | last+1: " << select_b_d(6) << std::endl;
+  std::cout << "last: " << select_b_d(5) << std::endl;
 
   for (const auto i : indices)
     std::cout << i << " | ";
   std::cout << std::endl;
 
   // create wavelet tree based on co-lexi sorted phrases
-  // pfp_wt wt(indices, parse);
-  // wt.print_leafs();
+  pfp_wt wt(indices, parse);
+
+  wt.print_leafs();
+  std::cout << "> access query" << std::endl;
+  std::cout << "wt[0]: " << wt[0] << " | wt[1]: " << wt[1] << " | wt[2]: " << wt[2]
+            << " | wt[3]: " << wt[3] << " | wt[4]: " << wt[4] << " | wt[5]: " << wt[5] << std::endl;
+  
+  std::cout << "> rank queries" << std::endl;
+  for (size_t j = 0; j < indices.size(); ++j) {
+    std::cout << indices[j] << ": ";
+    for (size_t i = 1; i <= wt.size(); ++i) {
+      std::cout << " | rank(" << i << ", " << indices[j] << "): " << wt.rank(i, indices[j]);
+    }
+    std::cout << std::endl;
+  }
+
+  std::cout << "> select queries" << std::endl;
+  for (size_t j = 0; j < indices.size(); ++j) {
+    std::cout << indices[j] << ": ";
+    std::cout << " select(" << 1 << ", " << indices[j] << "): " << wt.select(1, indices[j]);
+    std::cout << std::endl;
+  }
+  std::cout << "2: select(" << 2 << ", " << 2 << "): " << wt.select(2, 2) << std::endl;
 }
 
 int main(int argc, char const *argv[]) {

@@ -77,7 +77,6 @@ int main(int argc, char const *argv[]) {
   verbose("Parsing ISA size (bytes):      " , sizeof(pf.pars.isaP[0]) * pf.pars.isaP.size());
   verbose("Parsing LCP size (bytes):      " , sizeof(pf.pars.lcpP[0]) * pf.pars.lcpP.size());
 
-
   size_t n = pf.n;
 
   verbose("Providing LCE support");
@@ -85,10 +84,10 @@ int main(int argc, char const *argv[]) {
     pfp_lce_support lce_ds(pf)
   );
 
-  // verbose("Computing W");
-  // _elapsed_time(
-  //   pfp_sa_support pfp_sa(pf)
-  // );
+  verbose("Computing W");
+  _elapsed_time(
+    pfp_sa_support pfp_sa(pf)
+  );
 
   // Building b_bwt
 

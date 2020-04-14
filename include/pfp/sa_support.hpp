@@ -30,46 +30,50 @@
 #include <sdsl/rmq_support.hpp>
 #include <sdsl/int_vector.hpp>
 
-#include<pfp.hpp>
-#include<wt.hpp>
+#include <pfp.hpp>
+#include <wt.hpp>
+#include <lce_support.hpp>
 
 class pfp_sa_support {
-protected:
+public:
   pf_parsing& pfp;
 
-  pfp_wt wt;
-public:
   pfp_sa_support(pf_parsing & pfp_)
     : pfp(pfp_)
-  {
-    verbose("Creating PFP SA data structure");
-    // create alphabet (phrases)
-    std::vector<uint32_t> alphabet(pfp.dict.n_phrases());
-    std::iota(alphabet.begin(), alphabet.end(), 1);
+  { }
 
-    // sort alphabet based on co-lexicographical order of phrases
-    // pfp.pars.p - seq of phrase ids
-    // pfp.dict.b_d
-    // co-lexi compare function
-    auto co_lexi_dict_cmp = [&](const uint32_t i, const uint32_t j) {
-      auto i_start = pfp.dict.select_b_d(i);
-      auto i_end = i_start + pfp.dict.length_of_phrase(i) - 1;
-      auto j_start = pfp.dict.select_b_d(j);
-      auto j_end = j_start + pfp.dict.length_of_phrase(j) - 1;
+  size_t size() const {
+    return pfp.n;
+  }
 
-      auto i_r_begin = pfp.dict.d.rend() - i_end - 1;
-      auto i_r_end = pfp.dict.d.rend() - i_start;
-      auto j_r_begin = pfp.dict.d.rend() - j_end - 1;
-      auto j_r_end = pfp.dict.d.rend() - j_start;
+  uint32_t sa(uint32_t i) {
+    // i + 1 -> rank is for (0 ... i - 1) interval
+    const auto rank_i = pfp.b_bwt_rank_1(i + 1);
+    const auto lex_rank_i = rank_i - 1;
+    const auto interval_rank = i - pfp.b_bwt_select_1(rank_i); // lex rank - 0-based
+    const auto & m = pfp.M[lex_rank_i];
 
-      return std::lexicographical_compare(i_r_begin, i_r_end, j_r_begin, j_r_end);
-    };
-    std::sort(alphabet.begin(), alphabet.end(), co_lexi_dict_cmp);
+    // WT have 0 delimiter, lex smallest, so it shifted intervals
+    // rank + 1 because its 0-based and select is 1-based
+    const auto k = pfp.w_wt.range_select(m.left, m.right, interval_rank + 1);
 
-    wt.construct(alphabet, pfp.pars.p);
-    // wt.print_leafs();
+    uint32_t p_i;
+    if (pfp.pars.saP[k + 1] > 0)
+      p_i = pfp.pars.saP[k + 1] - 1;
+    else
+      p_i = pfp.pars.p.size() - 2;
+
+    size_t occ_k_next;
+    if (p_i + 2 > pfp.pars.p.size() - 1)
+      occ_k_next = pfp.n;
+    else
+      occ_k_next = pfp.select_b_p(p_i + 2); // start of next phrase in S
+
+    if (occ_k_next < m.len)
+      return pfp.n - (m.len - occ_k_next);
+    else
+      return occ_k_next - m.len; // b_p starts with trigger string (occ_k_next - (m.len - pfp.w) - pfp.w)
   }
 };
-
 
 #endif /* end of include guard: _PFP_SA_SUPPORT_HH */

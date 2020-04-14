@@ -29,25 +29,10 @@ else()
 endif()
 
 
-include(FetchContent)
-set(CMAKE_INSTALL_INCLUDEDIR "include") # This is an hack because include(GUIInstallDirs) doesn't work
+
 # Configure thirdparty
 # ------------------------------------------------------------------------------
-
-
-
-FetchContent_Declare(
-  benchmark
-  GIT_REPOSITORY https://github.com/google/benchmark.git
-  GIT_TAG        v1.5.0
-  )
-  
-FetchContent_GetProperties(benchmark)
-if(NOT benchmark_POPULATED)
-FetchContent_Populate(benchmark)
-set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Enable testing of the benchmark library." FORCE)
-add_subdirectory(${benchmark_SOURCE_DIR} ${benchmark_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
+set(CMAKE_INSTALL_INCLUDEDIR "include") # This is an hack because include(GUIInstallDirs) doesn't work
 
 add_subdirectory(thirdparty)
 

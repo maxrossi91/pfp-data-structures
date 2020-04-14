@@ -29,14 +29,13 @@
 
 #include <sdsl/rmq_support.hpp>
 #include <sdsl/int_vector.hpp>
-extern "C" {
-  #include <gsacak.h>
-}
-#include <malloc_count.h>
 
 #include <pfp.hpp>
 #include <lce_support.hpp>
 #include <sa_support.hpp>
+
+#include <malloc_count.h>
+
 
 
 int main(int argc, char const *argv[]) {
@@ -88,66 +87,6 @@ int main(int argc, char const *argv[]) {
   _elapsed_time(
     pfp_sa_support pfp_sa(pf)
   );
-
-  // Building b_bwt
-
-#if 0
-// TEST lca_ds
-std::vector<unsigned char> text;
-read_fasta_file(filename.c_str(), text);
-verbose("Text size: " , text.size());
-
-// build lcp of the Text
-text.push_back(0);
-uint_t t_len = text.size();
-std::vector<uint_t> saT(t_len); //uint_t *saT = new uint_t[t_len];
-std::vector<int_t> lcpT(t_len); //int_t *lcpT = new int_t[t_len];
-
-verbose("Computing SA, ISA, and LCP of the text");
-// time_t  start = time(NULL);
-sacak(&text[0],&saT[0],t_len);
-
-// Computing isaT
-std::vector<uint_t> isaT(t_len); //uint_t *isaT = new uint_t[t_len];
-for(int i = 0; i < t_len; ++i){
-  isaT[saT[i]] = i;
-}
-
-LCP_array(&text[0], isaT, saT, t_len, lcpT);
-sdsl::rmq_succinct_sct<> rmq_lcp_T = sdsl::rmq_succinct_sct<>(&lcpT);
-
-/*
-// Compute the Dictionary
-std::vector<std::string> di;
-
-std::string s;
-for(size_t i=0;i<saD.size();i++){
-  if(d[i]==EndOfWord) {
-    di.push_back(s);
-    s.clear();
-  }else{
-    s.append(1,d[i]);
-  }
-}
-*/
-
-verbose("Testing LCE ds");
-// for(int i = 1; i < text.size()-1 ; ++i){
-//   for(int j = i+1; j < text.size(); ++j){
-//     auto a = lce_ds.lce(saT[i], saT[j]);
-//     auto b = lcpT[rmq_lcp_T(i+1,j)];//lcpT[i+1];
-//     assert( a == b);
-//   }
-// }
-for(int i = 1; i < text.size()-1 ; ++i){
-    auto a = lce_ds.lce(saT[i], saT[i+1]);
-    auto b = lcpT[i+1];//lcpT[rmq_lcp_T(i+1,j)];//lcpT[i+1];
-    assert( a == b);
-}
-
-#endif
-
-
 
   return 0;
 

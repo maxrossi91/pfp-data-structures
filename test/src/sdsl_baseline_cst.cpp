@@ -49,12 +49,18 @@ int main(int argc, char const *argv[]) {
     uint8_t num_bytes = 1;
     // build cst of the Text
     verbose("Computing CST of the text");
-    sdsl::cst_sct3<> cst;
+    sdsl::cst_sct3<sdsl::csa_wt<sdsl::wt_huff<sdsl::rrr_vector<>>>, sdsl::lcp_support_sada<>> cst;
     _elapsed_time(
      sdsl::construct_im(cst, static_cast<const char*>(&text[0]), num_bytes);
     );
-
     verbose("Memory peak: ", malloc_count_peak());
+
+    verbose("CST size: ", size_in_bytes(cst));
+
+    verbose("Storing the CST to file");
+    std::string outfile = filename + ".sdsl.cst";
+    store_to_file(cst, outfile.c_str());
+    
 
   return 0;
 

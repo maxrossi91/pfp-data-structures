@@ -20,6 +20,7 @@ SET(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 # ------------------------------------------------------------------------------
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
+
 find_package(Git)
 if(GIT_FOUND)
     message("git found: ${GIT_EXECUTABLE}")
@@ -27,10 +28,13 @@ else()
     message(WARNING "git not found. Cloning of submodules will not work.")
 endif()
 
+
+
 # Configure thirdparty
 # ------------------------------------------------------------------------------
-add_subdirectory(thirdparty)
+set(CMAKE_INSTALL_INCLUDEDIR "include") # This is an hack because include(GUIInstallDirs) doesn't work
 
+add_subdirectory(thirdparty)
 
 # Configure the compiler with the appropriate flags
 # ------------------------------------------------------------------------------

@@ -36,3 +36,6 @@ build/
 
 # Others
 .vscode/
+data/
+logs/
+script/

@@ -29,11 +29,13 @@
 #include <sdsl/int_vector.hpp>
 #include <sdsl/lcp.hpp>
 #include <sdsl/suffix_arrays.hpp>
+#include <sdsl/suffix_trees.hpp>
 
 #include <common.hpp>
 #include <gtest/gtest.h>
 #include <pfp.hpp>
 #include <lce_support.hpp>
+#include <sa_support.hpp>
 
 extern "C" {
     #include<gsacak.h>
@@ -138,35 +140,48 @@ TEST(lce_construct_test, paper_example)
     }
     TEST_COUT << "Test phrase_length" << std::endl;
 
-
-    pfp_lce_support lce_ds(pf);
-
     // TEST b_p
-    for (size_t i = 0; i < lce_ds.b_p.size(); ++i)
+    for (size_t i = 0; i < pf.pars.b_p.size(); ++i)
     {
-        EXPECT_EQ(lce_ds.b_p[i], b_p[i]) << "at position: " << i;
+        EXPECT_EQ(pf.pars.b_p[i], b_p[i]) << "at position: " << i;
     }
     TEST_COUT << "Test b_p" << std::endl;
-    
-    
+
+    pfp_lce_support lce_ds(pf);
+    pfp_sa_support sa_ds(pf);
+
     // TEST lce_ds
+    std::vector<char> tmp_text = {'#', 'G', 'A', 'T', 'T', 'A', 'C', 'A', 'T', '#',
+                                  'G', 'A', 'T', 'A', 'C', 'A', 'T', '#',
+                                  'G', 'A', 'T', 'T', 'A', 'G', 'A', 'T', 'A', 0};
     // build lcp of the Text
+    // uint8_t num_bytes = 1;
+    // build cst of the Text
+    // verbose("Computing CSA of the text");
+    // sdsl::cache_config cc(false); // do not delete temp files after csa construction
+    // sdsl::csa_wt<> csa;
+    // sdsl::construct_im(csa, static_cast<const char *>(&tmp_text[0]), num_bytes);
+
+    // verbose("Computing LCP of the text");
+    // cc.delete_files = true; // delete temp files after lcp construction
+    // sdsl::lcp_wt<> lcp;
+    // sdsl::construct_im(lcp, static_cast<const char *>(&tmp_text[0]), num_bytes);
+
+    // verbose("Testing LCE ds");
+    // for (int i = 1; i < text.size() - 1; ++i)
+    // {
+    //     EXPECT_EQ(lce_ds.lce(sa_ds.sa(i), sa_ds.sa(i + 1)), lcp[i + 1]) << "At positions: " << sa_ds.sa(i) << " " << sa_ds.sa(i + 1);
+    // }
+
     uint8_t num_bytes = 1;
     // build cst of the Text
-    verbose("Computing CSA of the text");
-    sdsl::cache_config cc(false); // do not delete temp files after csa construction
-    sdsl::csa_wt<> csa;
-    sdsl::construct_im(csa, static_cast<const char *>(&text[0]), num_bytes);
+    sdsl::cst_sct3<sdsl::csa_wt<sdsl::wt_huff<sdsl::rrr_vector<>>>, sdsl::lcp_support_sada<>> cst;
+    sdsl::construct_im(cst, static_cast<const char *>(&text[0]), num_bytes);
 
-    verbose("Computing LCP of the text");
-    cc.delete_files = true; // delete temp files after lcp construction
-    sdsl::lcp_wt<> lcp;
-    sdsl::construct_im(lcp, static_cast<const char *>(&text[0]), num_bytes);
-
-    verbose("Testing LCE ds");
-    for (int i = 1; i < text.size() - 1; ++i)
+    TEST_COUT << "Testing LCE ds" << std::endl;
+    for (int i = 0; i < text.size() - 1; ++i)
     {
-        EXPECT_EQ(lce_ds.lce(csa[i], csa[i + 1]), lcp[i + 1]) << "At positions: " << csa[i] << " " << csa[i + 1];
+        EXPECT_EQ(lce_ds.lce(i, i + 1), cst.depth(cst.lca(cst.select_leaf(cst.csa.isa[i] + 1), cst.select_leaf(cst.csa.isa[i + 1] + 1)))) <<  "At position: " << i;
     }
 }
 
@@ -175,30 +190,32 @@ TEST(lce_construct_test,lce_construct){
     size_t w = 10;
     pf_parsing pf(test_file, w);
     pfp_lce_support lce_ds(pf);
+    pfp_sa_support sa_ds(pf);
 
     // TEST lce_ds
     std::vector<char> text;
     read_fasta_file(test_file.c_str(), text);
+    std::vector<char> tmp(w-1, '#');
+    text.insert(text.begin(), tmp.begin(), tmp.end());
+    text.push_back(0);
+
     verbose("Text size: ", text.size());
 
     uint8_t num_bytes = 1;
     // build cst of the Text
-    verbose("Computing CSA of the text");
-    sdsl::cache_config cc(false); // do not delete temp files after csa construction
-    sdsl::csa_wt<> csa;
-    sdsl::construct_im(csa, static_cast<const char *>(&text[0]), num_bytes);
+    sdsl::cst_sct3<sdsl::csa_wt<sdsl::wt_huff<sdsl::rrr_vector<>>>, sdsl::lcp_support_sada<>> cst;
+    sdsl::construct_im(cst, static_cast<const char *>(&text[0]), num_bytes);
 
-    verbose("Computing LCP of the text");
-    cc.delete_files = true; // delete temp files after lcp construction
-    sdsl::lcp_wt<> lcp;
-    sdsl::construct_im(lcp, static_cast<const char *>(&text[0]), num_bytes);
-
-    verbose("Testing LCE ds");
+    verbose("Testing LCP ds");
     for (int i = 1; i < text.size() - 1; ++i)
     {
-        auto a = lce_ds.lce(csa[i], csa[i + 1]);
-        auto b = lcp[i + 1];
-        EXPECT_EQ(a, b);
+        EXPECT_EQ(lce_ds.lce(sa_ds.sa(i), sa_ds.sa(i + 1)), cst.lcp[i + 1]);
+    }
+
+    verbose("Testing LCE ds");
+    for (int i = 0; i < text.size() - 1; ++i)
+    {
+        EXPECT_EQ(lce_ds.lce(i, i + 1), cst.depth(cst.lca(cst.select_leaf(cst.csa.isa[i]+1), cst.select_leaf(cst.csa.isa[i + 1]+1))));
     }
 
 }

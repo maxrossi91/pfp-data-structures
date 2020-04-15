@@ -34,6 +34,7 @@
 #include <common.hpp>
 #include <pfp.hpp>
 #include <lce_support.hpp>
+#include <sa_support.hpp>
 
 extern "C" {
     #include<gsacak.h>
@@ -92,35 +93,18 @@ extern "C" {
 //     info("BM_pfp_lce_queries done");
 // }
 // BENCHMARK_REGISTER_F(MyFixture, BM_pfp_lce_queries);
+
+
 std::string test_file = "../data/yeast.fasta";
 
-static void BM_pfp_lce_queries(benchmark::State &state)
+static void BM_pfp_lcp_queries(benchmark::State &state)
 {
     // Perform setup here
     size_t w = 10;
     pf_parsing pf(test_file,w);
     pfp_lce_support lce_ds(pf);
+    pfp_sa_support sa_ds(pf);
 
-
-    std::vector<char> text;
-    read_fasta_file(test_file.c_str(), text);
-
-    uint8_t num_bytes = 1;
-    // build cst of the Text
-    sdsl::cache_config cc(false); // do not delete temp files after csa construction  
-    sdsl::csa_wt<> csa;
-    sdsl::construct_im(csa, static_cast<const char *>(&text[0]), num_bytes);
-
-    // cc.delete_files = true; // delete temp files after lcp construction
-    // sdsl::lcp_wt<> lcp;
-    // sdsl::construct_im(lcp, static_cast<const char *>(&text[0]), num_bytes);
-
-    std::vector<uint32_t> plain_csa(csa.size());
-
-    for (int i = 0; i < csa.size(); ++i)
-    {
-        plain_csa[i] = csa[i];
-    }
     verbose("Initialization pfp done");
 
     // computing size
@@ -140,14 +124,14 @@ static void BM_pfp_lce_queries(benchmark::State &state)
     for (auto _ : state)
     {
         // This code gets timed
-        for (int i = 0; i < csa.size() - 1; ++i)
-            benchmark::DoNotOptimize(lce_ds.lce(plain_csa[i], plain_csa[i + 1]));
+        for (int i = 0; i < sa_ds.size()-1; ++i)
+            benchmark::DoNotOptimize(lce_ds.lce(sa_ds.sa(i), sa_ds.sa(i + 1)));
     }
 
-    state.counters.insert({{"size in B", size}, {"nops", csa.size() - 1}});
+    state.counters.insert({{"size in B", size}, {"nops", sa_ds.size() - 1}});
     verbose("Queries done");
 }
-BENCHMARK(BM_pfp_lce_queries);
+BENCHMARK(BM_pfp_lcp_queries);
 
 static void BM_sdsl_lcp_queries(benchmark::State &state)
 {
@@ -180,6 +164,30 @@ static void BM_sdsl_lcp_queries(benchmark::State &state)
 }
 // Register the function as a benchmark
 BENCHMARK(BM_sdsl_lcp_queries);
+
+static void BM_sdsl_lce_queries(benchmark::State &state)
+{
+    // Perform setup here
+    std::vector<char> text;
+    read_fasta_file(test_file.c_str(), text);
+
+    uint8_t num_bytes = 1;
+
+    sdsl::cst_sct3<sdsl::csa_wt<sdsl::wt_huff<sdsl::rrr_vector<>>>, sdsl::lcp_support_sada<>> cst;
+    sdsl::construct_im(cst, static_cast<const char *>(&text[0]), num_bytes);
+
+    state.counters.insert({{"size in B", size_in_bytes(cst)}, {"nops", cst.csa.size() - 1}});
+    verbose("Initialization sdsl done");
+    for (auto _ : state)
+    {
+        // This code gets timed
+        for (int i = 0; i < cst.csa.size()-1; ++i)
+            benchmark::DoNotOptimize(cst.depth(cst.lca(cst.select_leaf(cst.csa.isa[i]+1), cst.select_leaf(cst.csa.isa[i+1]+1))));
+    }
+    verbose("Queries done");
+}
+// Register the function as a benchmark
+BENCHMARK(BM_sdsl_lce_queries);
 
 
 // static void BM_bt_cst_lcp_queries(benchmark::State &state)

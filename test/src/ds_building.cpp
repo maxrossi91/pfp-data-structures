@@ -83,7 +83,7 @@ int main(int argc, char const *argv[]) {
     pfp_lce_support lce_ds(pf)
   );
 
-  verbose("Computing W");
+  verbose("Providing SA support");
   _elapsed_time(
     pfp_sa_support pfp_sa(pf)
   );

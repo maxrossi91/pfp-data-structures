@@ -209,6 +209,21 @@ TEST(sa_construct_test, paper_example)
     }
     TEST_COUT << "Test PFP SA" << std::endl;
 
+
+    uint8_t num_bytes = 1;
+    // build cst of the Text
+    TEST_COUT << "Computing CSA of the text" << std::endl;
+    std::vector<char> tmp_text = {'#', 'G', 'A', 'T', 'T', 'A', 'C', 'A', 'T', '#',
+                                  'G', 'A', 'T', 'A', 'C', 'A', 'T', '#',
+                                  'G', 'A', 'T', 'T', 'A', 'G', 'A', 'T', 'A', 0};
+    sdsl::csa_wt<> csa;
+    sdsl::construct_im(csa, static_cast<const char *>(&tmp_text[0]), num_bytes);
+    for (size_t i = 0; i < pf_sa.size(); ++i) {
+        EXPECT_EQ(pf_sa.sa(i), (csa[i] + (tmp_text.size()) - w + 1) % (tmp_text.size())) << "at position: " << i;
+    }
+    TEST_COUT << "Test PFP SA and cst" << std::endl;
+
+
     std::vector<uint32_t> isa(text.size(), 0);
     std::vector<uint32_t> lcp(text.size(), 0);
     for (size_t i = 0; i < sa.size(); ++i)
@@ -216,44 +231,38 @@ TEST(sa_construct_test, paper_example)
 
     LCP_array_cyclic_text(&text[0], isa, sa, text.size(), lcp);
 
-    verbose("Testing LCE ds");
     for (int i = 1; i < text.size() - 1; ++i)
     {
         EXPECT_EQ(lce_ds.lce(pf_sa.sa(i), pf_sa.sa(i + 1)), lcp[i + 1]) << "At positions: " << pf_sa.sa(i) << " " << pf_sa.sa(i + 1);
     }
+    TEST_COUT << "Test LCE ds" << std::endl;
 }
 
-// TEST(sa_construct_test,sa_construct){
+TEST(sa_construct_test,sa_construct){
 
-//     size_t w = 10;
-//     pf_parsing pf(test_file, w);
-//     pfp_sa_support sa_ds(pf);
+    size_t w = 10;
+    pf_parsing pf(test_file, w);
+    pfp_sa_support sa_ds(pf);
 
-//     // TEST sa_ds
-//     std::vector<char> text;
-//     read_fasta_file(test_file.c_str(), text);
-//     verbose("Text size: ", text.size());
+    // TEST sa_ds
+    std::vector<char> text;
+    read_fasta_file(test_file.c_str(), text);
+    std::vector<char> tmp(w-1,'#');
+    text.insert(text.begin(),tmp.begin(),tmp.end());
+    text.push_back(0);
 
-//     uint8_t num_bytes = 1;
-//     // build cst of the Text
-//     verbose("Computing CSA of the text");
-//     sdsl::cache_config cc(false); // do not delete temp files after csa construction
-//     sdsl::csa_wt<> csa;
-//     sdsl::construct_im(csa, static_cast<const char *>(&text[0]), num_bytes);
+    uint8_t num_bytes = 1;
+    // build cst of the Text
+    TEST_COUT << "Computing CSA of the text" << std::endl;
+    sdsl::csa_wt<> csa;
+    sdsl::construct_im(csa, static_cast<const char *>(&text[0]), num_bytes);
 
-//     verbose("Computing LCP of the text");
-//     cc.delete_files = true; // delete temp files after lcp construction
-//     sdsl::lcp_wt<> lcp;
-//     sdsl::construct_im(lcp, static_cast<const char *>(&text[0]), num_bytes);
-
-//     verbose("Testing LCE ds");
-//     for (int i = 1; i < text.size() - 1; ++i)
-//     {
-//         auto a = sa_ds.sa(csa[i], csa[i + 1]);
-//         auto b = lcp[i + 1];
-//         EXPECT_EQ(a, b);
-//     }
-// }
+    TEST_COUT << "Testing SA ds" << std::endl;
+    for (int i = 0; i < text.size(); ++i)
+    {
+        EXPECT_EQ(sa_ds.sa(i), (csa[i] + (text.size()) - w + 1) % (text.size())) << "At positions: " << i;
+    }
+}
 
 int main(int argc, char **argv)
 {

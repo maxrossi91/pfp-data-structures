@@ -9,7 +9,7 @@ FetchContent_Declare(
 FetchContent_GetProperties(bigbwt)
 if(NOT bigbwt_POPULATED)
   FetchContent_Populate(bigbwt)
-  add_subdirectory(${bigbwt_SOURCE_DIR} ${bigbwt_BINARY_DIR} EXCLUDE_FROM_ALL)
+  add_subdirectory(${bigbwt_SOURCE_DIR} ${bigbwt_BINARY_DIR})
 
   add_library(gsacak OBJECT ${bigbwt_SOURCE_DIR}/gsa/gsacak.c ${bigbwt_SOURCE_DIR}/gsa/gsacak.h)
   target_include_directories(gsacak PUBLIC "${bigbwt_SOURCE_DIR}/gsa")

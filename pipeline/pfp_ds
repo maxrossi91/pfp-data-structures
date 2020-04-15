@@ -17,7 +17,7 @@ used internally by the algorithm.
 
 dirname         = os.path.dirname(os.path.abspath(__file__))
 
-bigbwt_dirname  = os.path.join(dirname, "thirdparty/Big-BWT")
+bigbwt_dirname  = os.path.join(dirname, "_deps/bigbwt-build")
 ds_dirname      = os.path.join(dirname, "test/src")
 
 parse_exe       = os.path.join(bigbwt_dirname, "newscan.x")

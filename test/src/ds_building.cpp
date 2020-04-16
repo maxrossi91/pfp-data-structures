@@ -29,6 +29,7 @@
 
 #include <sdsl/rmq_support.hpp>
 #include <sdsl/int_vector.hpp>
+#include <sdsl/io.hpp>
 
 #include <pfp.hpp>
 #include <lce_support.hpp>
@@ -65,17 +66,7 @@ int main(int argc, char const *argv[]) {
 
   pf_parsing pf(filename,w);
 
-  verbose("Dictionary size (bytes):       " , sizeof(pf.dict.d[0]) * pf.dict.d.size());
-  verbose("Dictionary SA size (bytes):    " , sizeof(pf.dict.saD[0]) * pf.dict.saD.size());
-  verbose("Dictionary ISA size (bytes):   " , sizeof(pf.dict.isaD[0]) * pf.dict.isaD.size());
-  verbose("Dictionary LCP size (bytes):   " , sizeof(pf.dict.lcpD[0]) * pf.dict.lcpD.size());
-  verbose("Dictionary DA size (bytes):    " , sizeof(pf.dict.daD[0]) * pf.dict.daD.size());
-  verbose("Dictionary co-DA size (bytes): " , sizeof(pf.dict.colex_daD[0]) * pf.dict.colex_daD.size());
-  verbose("Parsing size (bytes):          " , sizeof(pf.pars.p[0]) * pf.pars.p.size());
-  verbose("Parsing SA size (bytes):       " , sizeof(pf.pars.saP[0]) * pf.pars.saP.size());
-  verbose("Parsing ISA size (bytes):      " , sizeof(pf.pars.isaP[0]) * pf.pars.isaP.size());
-  verbose("Parsing LCP size (bytes):      " , sizeof(pf.pars.lcpP[0]) * pf.pars.lcpP.size());
-
+  verbose("PFP DS construction complete");
   size_t n = pf.n;
 
   verbose("Providing LCE support");
@@ -88,6 +79,13 @@ int main(int argc, char const *argv[]) {
     pfp_sa_support pfp_sa(pf)
   );
 
+  verbose("Memory peak: ", malloc_count_peak());
+
+  verbose("PFP DS size (bytes): ", sdsl::size_in_bytes(pf));
+
+  verbose("Storing the PFP to file");
+  std::string outfile = filename + ".pf.ds";
+  sdsl::store_to_file(pf, outfile.c_str());
   return 0;
 
 }

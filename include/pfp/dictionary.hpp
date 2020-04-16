@@ -51,13 +51,17 @@ public:
   std::vector<int_t> colex_daD;
   sdsl::rmq_succinct_sct<> rmq_colex_daD;
   sdsl::range_maximum_sct<>::type rMq_colex_daD;
+  std::vector<uint_t> colex_id;
+
   bool saD_flag = false;
   bool isaD_flag = false;
   bool daD_flag = false;
   bool lcpD_flag = false;
   bool rmq_lcp_D_flag = false;
   
-  std::vector<uint_t> colex_id;
+
+
+  typedef size_t size_type;
 
   dictionary( std::vector<uint8_t>& d_,
               size_t w,
@@ -339,6 +343,48 @@ public:
 
   }
 
+  // Serialize to a stream.
+  size_type serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr, std::string name = "") const
+  {
+    sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
+    size_type written_bytes = 0;
+
+    written_bytes += sdsl::serialize(d, out, child, "dictionary");
+    written_bytes += sdsl::serialize(saD, out, child, "saD");
+    written_bytes += sdsl::serialize(isaD, out, child, "isaD");
+    written_bytes += sdsl::serialize(daD, out, child, "daD");
+    written_bytes += sdsl::serialize(lcpD, out, child, "lcpD");
+    written_bytes += rmq_lcp_D.serialize(out, child, "rmq_lcp_D");
+    written_bytes += b_d.serialize(out, child, "b_d");
+    written_bytes += rank_b_d.serialize(out, child, "rank_b_d");
+    written_bytes += select_b_d.serialize(out, child, "select_b_d");
+    written_bytes += sdsl::serialize(colex_daD, out, child, "colex_daD");
+    written_bytes += rmq_colex_daD.serialize(out, child, "rmq_colex_daD");
+    written_bytes += rMq_colex_daD.serialize(out, child, "rMq_colex_daD");
+    written_bytes += sdsl::serialize(colex_id, out, child, "colex_id");
+
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+
+  }
+
+  //! Load from a stream.
+  void load(std::istream &in)
+  {
+    sdsl::load(d, in);
+    sdsl::load(saD, in);
+    sdsl::load(isaD, in);
+    sdsl::load(daD, in);
+    sdsl::load(lcpD, in);
+    rmq_lcp_D.load(in);
+    b_d.load(in);
+    rank_b_d.load(in, &b_d);
+    select_b_d.load(in, &b_d);
+    sdsl::load(colex_daD, in);
+    rmq_colex_daD.load(in);
+    rMq_colex_daD.load(in);
+    sdsl::load(colex_id, in);
+  }
 };
 
 

@@ -34,6 +34,9 @@ class pfp_wt {
 public:
   using wt_bv = sdsl::bit_vector;
   struct wt_node {
+  
+    typedef size_t size_type;
+  
     wt_node (wt_node * parent = nullptr)
       : parent(parent)
     { }
@@ -56,12 +59,52 @@ public:
     bool is_root () const {
       return parent == nullptr;
     }
+
+    size_type serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr, std::string name = "") const
+    {
+      sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
+      size_type written_bytes = 0;
+
+      written_bytes += bit_vector.serialize(out, child, "bit_vector");
+      written_bytes += bv_rank_1.serialize(out, child, "bv_rank_1");
+      written_bytes += bv_select_1.serialize(out, child, "bv_select_1");
+      written_bytes += bv_select_0.serialize(out, child, "bv_select_0");
+      written_bytes += sdsl::write_member(phrase_id, out, child, "phrase_id");
+      written_bytes += sdsl::write_member(is_leaf(), out, child, "is_leaf()");
+      if(!is_leaf()){
+        written_bytes += (*left).serialize(out, child, "left");
+        written_bytes += (*right).serialize(out, child, "right");
+      }
+      
+      sdsl::structure_tree::add_size(child, written_bytes);
+      return written_bytes;
+    }
+
+    //! Load from a stream.
+    void load(std::istream &in)
+    {
+      bit_vector.load(in);
+      bv_rank_1.load(in, &bit_vector);
+      bv_select_1.load(in, &bit_vector);
+      bv_select_0.load(in, &bit_vector);
+      sdsl::load(phrase_id, in);
+      bool leaf;
+      sdsl::read_member(leaf, in);
+      if(!leaf){
+        left = std::unique_ptr<wt_node>(new wt_node(std::addressof(*this)));
+        right = std::unique_ptr<wt_node>(new wt_node(std::addressof(*this)));
+        left->load(in);
+        right->load(in);
+      }
+    }
   };
 
   struct leaf_info {
     size_t alphabet_index;
     wt_node * leaf_link = nullptr;
   };
+
+  typedef size_t size_type;
 
   pfp_wt()
     : root(new wt_node())
@@ -230,6 +273,69 @@ public:
     }
 
     return ans;
+  }
+
+
+  size_type serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr, std::string name = "") const
+  {
+    sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
+    size_type written_bytes = 0;
+
+    written_bytes += sdsl::serialize(alphabet, out, child, "alphabet");
+    written_bytes += root->serialize(out, child, "root");
+    
+    std::vector<uint32_t> tmp_phrase_ids;
+    std::vector<size_t> tmp_alphbet_indices;
+
+
+    for (const auto &kv : leafs){
+      tmp_phrase_ids.push_back(kv.first);
+      tmp_alphbet_indices.push_back(kv.second.alphabet_index);
+    }
+
+    written_bytes += sdsl::serialize(tmp_phrase_ids, out, child, "phrase_ids");
+    written_bytes += sdsl::serialize(tmp_alphbet_indices, out, child, "alphbet_indices");
+
+
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+  }
+
+  //! Load from a stream.
+  void load(std::istream &in)
+  {
+    sdsl::load(alphabet, in);
+    root->load(in);
+
+    std::vector<uint32_t> tmp_phrase_ids;
+    std::vector<size_t> tmp_alphbet_indices;
+
+    sdsl::load(tmp_phrase_ids, in);
+    sdsl::load(tmp_alphbet_indices, in);
+
+    for(size_t i = 0; i < tmp_phrase_ids.size(); ++i){
+      leaf_info tmp_info;
+      tmp_info.alphabet_index = tmp_alphbet_indices[i];
+      leafs[tmp_phrase_ids[i]] = tmp_info;
+    }
+
+    tmp_phrase_ids.clear();
+    tmp_alphbet_indices.clear();
+
+    // Fill leaves pointers
+    std::function<void(wt_node &, std::map<uint32_t, leaf_info> &)> vis;
+    vis = [&vis](wt_node &node, std::map<uint32_t, leaf_info> &l) -> void { 
+      if(node.is_leaf()){
+        // leaf
+        l[node.phrase_id].leaf_link = std::addressof(node);
+        return;
+      } else {
+        vis(*(node.left),l);
+        vis(*(node.right),l);
+      }
+    };
+
+    vis(*root,leafs);
   }
 
   std::vector<uint32_t> alphabet;

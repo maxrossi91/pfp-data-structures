@@ -41,15 +41,17 @@ public:
   std::vector<uint_t> isaP;
   std::vector<int_t> lcpP;
   sdsl::rmq_succinct_sct<> rmq_lcp_P;
-  sdsl::bit_vector b_p; // Starting position of each phrase in D
-  sdsl::bit_vector::rank_1_type rank_b_p;
-  sdsl::bit_vector::select_1_type select_b_p;
+  // sdsl::bit_vector b_p; // Starting position of each phrase in D
+  // sdsl::bit_vector::rank_1_type rank_b_p;
+  // sdsl::bit_vector::select_1_type select_b_p;
   bool saP_flag = false;
   bool isaP_flag = false;
   bool lcpP_flag = false;
   bool rmq_lcp_P_flag = false;
 
   size_t alphabet_size;
+
+  typedef size_t size_type;
 
   parse(  std::vector<uint32_t>& p_,
           size_t alphabet_size_,
@@ -130,6 +132,40 @@ public:
       );
     }
 
+  }
+
+  // Serialize to a stream.
+  size_type serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr, std::string name = "") const
+  {
+    sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
+    size_type written_bytes = 0;
+
+    written_bytes += sdsl::serialize(p, out, child, "parse");
+    written_bytes += sdsl::serialize(saP, out, child, "saP");
+    written_bytes += sdsl::serialize(isaP, out, child, "isaP");
+    written_bytes += sdsl::serialize(lcpP, out, child, "lcpP");
+    written_bytes += rmq_lcp_P.serialize(out, child, "rmq_lcp_P");
+    // written_bytes += b_p.serialize(out, child, "b_p");
+    // written_bytes += rank_b_p.serialize(out, child, "rank_b_p");
+    // written_bytes += select_b_p.serialize(out, child, "select_b_p");
+    written_bytes += sdsl::write_member(alphabet_size, out, child, "alphabet_size");
+
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+  }
+
+  //! Load from a stream.
+  void load(std::istream &in)
+  {
+    sdsl::load(p, in);
+    sdsl::load(saP, in);
+    sdsl::load(isaP, in);
+    sdsl::load(lcpP, in);
+    rmq_lcp_P.load(in);
+    // b_p.load(in);
+    // rank_b_p.load(in);
+    // select_b_p.load(in);
+    sdsl::read_member(alphabet_size, in);
   }
 
 };

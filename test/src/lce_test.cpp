@@ -141,9 +141,9 @@ TEST(lce_construct_test, paper_example)
     TEST_COUT << "Test phrase_length" << std::endl;
 
     // TEST b_p
-    for (size_t i = 0; i < pf.pars.b_p.size(); ++i)
+    for (size_t i = 0; i < pf.b_p.size(); ++i)
     {
-        EXPECT_EQ(pf.pars.b_p[i], b_p[i]) << "at position: " << i;
+        EXPECT_EQ(pf.b_p[i], b_p[i]) << "at position: " << i;
     }
     TEST_COUT << "Test b_p" << std::endl;
 

@@ -89,6 +89,9 @@ public:
 
     verbose("Computing W of BWT(P)");
     _elapsed_time(build_W());
+
+    // Clear unnecessary elements
+    clear_unnecessary_elements();
   }
 
   pf_parsing( std::string filename, size_t w_):
@@ -117,6 +120,9 @@ public:
 
     verbose("Computing W of BWT(P)");
     _elapsed_time(build_W());
+
+    // Clear unnecessary elements
+    clear_unnecessary_elements();
   }
 
   void compute_b_p() {
@@ -242,12 +248,21 @@ public:
     w_wt.construct(alphabet, bwt_p);
   }
 
+  void clear_unnecessary_elements(){
+    dict.daD.clear();
+    dict.colex_daD.clear();
+    dict.colex_id.clear();
+    pars.saP.clear();
+    //    dict.rmq_colex_daD.clear();
+    //    dict.rMq_colex_daD.clear();
+  }
+
   // Serialize to a stream.
   size_type serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr, std::string name = "") const
   {
     sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
     size_type written_bytes = 0;
-    
+
     written_bytes += dict.serialize(out, child, "dictionary");
     written_bytes += pars.serialize(out, child, "parse");
     written_bytes += sdsl::serialize(freq, out, child, "frequencies");

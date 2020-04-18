@@ -102,9 +102,9 @@ static void BM_pfp_lcp_queries(benchmark::State &state)
 {
     // Perform setup here
     size_t w = 10;
-    pf_parsing pf(test_file,w);
-    pfp_lce_support lce_ds(pf);
-    pfp_sa_support sa_ds(pf);
+    pf_parsing<> pf(test_file,w);
+    pfp_lce_support<> lce_ds(pf);
+    pfp_sa_support<> sa_ds(pf);
 
     verbose("Initialization pfp done");
 

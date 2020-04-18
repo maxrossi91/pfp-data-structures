@@ -105,7 +105,7 @@ int main(int argc, char* const argv[]) {
   verbose("Computing PFP data structures");
   std::chrono::high_resolution_clock::time_point t_insert_start = std::chrono::high_resolution_clock::now();
 
-  pf_parsing pf(args.filename, args.w);
+  pf_parsing<> pf(args.filename, args.w);
 
   std::chrono::high_resolution_clock::time_point t_insert_end = std::chrono::high_resolution_clock::now();
 
@@ -115,12 +115,12 @@ int main(int argc, char* const argv[]) {
 
   verbose("Providing LCE support");
   _elapsed_time(
-    pfp_lce_support lce_ds(pf)
+    pfp_lce_support<> lce_ds(pf)
   );
 
   verbose("Providing SA support");
   _elapsed_time(
-    pfp_sa_support pfp_sa(pf)
+    pfp_sa_support<> pfp_sa(pf)
   );
 
   verbose("Memory peak: ", malloc_count_peak());

@@ -108,7 +108,7 @@ public:
             isaP[saP[i]] = i;
           }
         }
-      )
+      );
 
     }
 

@@ -31,6 +31,7 @@
 #include <sdsl/suffix_arrays.hpp>
 
 #include <common.hpp>
+#include <strdup.hpp>
 #include <gtest/gtest.h>
 #include <pfp.hpp>
 #include <sa_support.hpp>

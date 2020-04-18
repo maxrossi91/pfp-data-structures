@@ -26,6 +26,7 @@
 #define VERBOSE
 
 #include <common.hpp>
+#include <strdup.hpp>
 #include <pfp/wt.hpp>
 
 #include <sdsl/rmq_support.hpp>

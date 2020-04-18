@@ -20,12 +20,12 @@
    \author Massimiliano Rossi
    \date 02/04/2020
 */
-
 #include<iostream>
 
 #define VERBOSE
 
 #include <common.hpp>
+#include <strdup.hpp>
 
 #include <sdsl/rmq_support.hpp>
 #include <sdsl/int_vector.hpp>
@@ -43,18 +43,13 @@ int main(int argc, char const *argv[]) {
         {0, 0}, {1, 3}, {2, 2}, {3, 4}, {4, 1}, {5, 5}
     };
 
-    std::vector<uint32_t> bwt_translate(bwt_sdsl.size());
+    sdsl::int_vector<> bwt_translate(bwt_sdsl.size());
     for (size_t i = 0; i < bwt_sdsl.size(); ++i) {
         bwt_translate[i] = map_alpha[bwt_sdsl[i]];
     }
 
-    std::stringstream tt;
-    tt.write(reinterpret_cast<const char *>(&bwt_translate[0]), sizeof(uint32_t) * bwt_translate.size());
-    const auto p = tt.str();
-    std::cout << "p size: " << p.size() << std::endl;
-
     sdsl::wt_int<> wt;
-    sdsl::construct_im(wt, tt.str(), 4);
+    sdsl::construct_im(wt, bwt_translate);
 
     std::cout << "BWT: ";
     std::copy(bwt_sdsl.begin(), bwt_sdsl.end(), std::ostream_iterator<uint32_t>(std::cout, " | "));

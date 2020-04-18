@@ -224,7 +224,7 @@ public:
   }
 
   size_type select(const size_type i, const uint32_t c) const override {
-    assert (i > 0 && i <= rank(size(), c));
+    // assert (i > 0 && i <= rank(size(), c));
 
     wt_node * t_node = leafs.at(c).leaf_link;
     size_type j = i;
@@ -246,7 +246,7 @@ public:
   }
 
   size_type range_count (const uint32_t t, const uint32_t b, const size_type i) const override {
-    assert(i > 0 && i <= root->bit_vector.size());
+    // assert(i > 0 && i <= root->bit_vector.size());
 
     // t and b intervals of leafs
     // for each leaf from (t, b) - rank(i, c)
@@ -259,7 +259,7 @@ public:
   }
 
   size_type range_count_2d (const uint32_t t, const size_type i) const override {
-    assert(i > 0 && i <= root->bit_vector.size());
+    // assert(i > 0 && i <= root->bit_vector.size());
 
     wt_node * node = std::addressof(*root);
     const size_type alphabet_index = leafs.at(t).alphabet_index;

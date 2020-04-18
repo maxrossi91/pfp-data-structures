@@ -32,6 +32,7 @@
 #include <sdsl/suffix_trees.hpp>
 
 #include <common.hpp>
+#include <strdup.hpp>
 #include <pfp.hpp>
 #include <lce_support.hpp>
 #include <sa_support.hpp>

@@ -38,6 +38,8 @@ def main():
   parser.add_argument('-v',  help='verbose',action='store_true')
  # parser.add_argument('-c',  help='check BWT using SACA-K',action='store_true')
   parser.add_argument('-f', help='read fasta',action='store_true')
+  parser.add_argument('-s', help='store ds',action='store_true')
+  parser.add_argument('-m', help='print memory usage',action='store_true')
  # parser.add_argument('--sum', help='compute output files sha256sum',action='store_true')
   parser.add_argument('--parsing',  help='stop after the parsing phase (debug only)',action='store_true')
   parser.add_argument('--compress',  help='compress output of the parsing phase (debug only)',action='store_true')
@@ -95,6 +97,8 @@ def main():
     command = "{exe} {file} -w {wsize}".format(
               exe = os.path.join(args.bigbwt_dir,build_pfp_ds),
               wsize=args.wsize, file=args.input)
+    if args.s: command += " -s"
+    if args.m: command += " -m"
     
     print("==== Computing PFP data structures. Command:", command)
     if(execute_command(command,logfile,logfile_name)!=True):

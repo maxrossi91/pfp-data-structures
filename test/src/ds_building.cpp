@@ -37,60 +37,6 @@
 
 #include <malloc_count.h>
 
-//********** argument options ********************
-// struct containing command line parameters and other globals
-struct Args{
-  std::string filename = "";
-  size_t w = 10;         // sliding window size and its default
-  bool store = false;    // store the data structure in the file
-  bool memo = false;     // print the memory usage
-  // bool is_fasta = false; // read a fasta file
-};
-
-void parseArgs(int argc, char* const argv[], Args &arg){
-  int c;
-  extern char *optarg;
-  extern int optind;
-
-  std::string usage("usage: " + std::string(argv[0]) + " infile [-w wsize] [-s store] [-m memo]\n\n" +
-                    "Computes the pfp data structures of infile, provided that infile.parse, infile.dict, and infile.occ exists.\n" +
-                    " store: [boolean] - store the data structure in infile.pfp.ds. (def. false)\n" +
-                    "  memo: [boolean] - print the data structure memory usage. (def. false)\n" +
-                    " wsize: [integer] - sliding window size (def. 10)\n");
-
-  std::string sarg;
-  while ((c = getopt(argc, argv, "w:mh")) != -1){
-    switch (c){
-    case 's':
-      arg.store = true;
-      break;
-    case 'w':
-      sarg.assign(optarg);
-      arg.w = stoi(sarg);
-      break;
-    case 'm':
-      arg.memo = true;
-      break;
-    // case 'f':
-    //   arg.is_fasta = true;
-    //   break;
-    case 'h':
-      error(usage);
-    case '?':
-      error("Unknown option.\n" , usage);
-      exit(1);
-    }
-  }
-  // the only input parameter is the file name
-  if (argc == optind + 1){
-    arg.filename.assign(argv[optind]);
-  }
-  else{
-    error("Invalid number of arguments\n" , usage);
-  }
-}
-
-//********** end argument options ********************
 
 int main(int argc, char* const argv[]) {
 
@@ -110,7 +56,7 @@ int main(int argc, char* const argv[]) {
 
   verbose("PFP DS construction complete");
   verbose("Elapsed time (s): ", std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count());
-
+  auto time = std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count();
 
   verbose("Providing LCE support");
   _elapsed_time(
@@ -122,14 +68,18 @@ int main(int argc, char* const argv[]) {
     pfp_sa_support pfp_sa(pf)
   );
 
+  auto mem_peak = malloc_count_peak();
   verbose("Memory peak: ", malloc_count_peak());
 
+  size_t space = 0;
   if(args.memo){
     verbose("Dictionary size (bytes)  : ", sdsl::size_in_bytes(pf.dict));
     verbose("Parse size (bytes)       : ", sdsl::size_in_bytes(pf.pars));
     verbose("Wavelet tree size (bytes): ", sdsl::size_in_bytes(pf.w_wt));
+    verbose("M size (bytes)           : ", sdsl::size_in_bytes(pf.M));
 
-    verbose("PFP DS size (bytes): ", sdsl::size_in_bytes(pf));
+    space = sdsl::size_in_bytes(pf);
+    verbose("PFP DS size (bytes): ", space);
   }
 
   if(args.store){
@@ -137,6 +87,9 @@ int main(int argc, char* const argv[]) {
     std::string outfile = args.filename + ".pf.ds";
     sdsl::store_to_file(pf, outfile.c_str());
   }
+
+  if (args.csv)
+    std::cerr << csv(args.filename.c_str(), time, space, mem_peak) << std::endl;
 
   return 0;
 

@@ -33,35 +33,43 @@
 
 #include <malloc_count.h>
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char *const argv[])
+{
 
-    if(argc < 2)
-        error("input file required");
-
-    std::string filename = argv[1];
+    Args args;
+    parseArgs(argc, argv, args);
 
     // TEST lca_ds
     verbose("Reading text from file");
     std::vector<char> text;
-    read_fasta_file(filename.c_str(), text);
+    read_fasta_file(args.filename.c_str(), text);
     verbose("Text size: " , text.size());
 
     uint8_t num_bytes = 1;
     // build cst of the Text
     verbose("Computing CST of the text");
     sdsl::cst_sct3<sdsl::csa_wt<sdsl::wt_huff<sdsl::rrr_vector<>>>, sdsl::lcp_support_sada<>> cst;
-    _elapsed_time(
+    auto time = _elapsed_time(
      sdsl::construct_im(cst, static_cast<const char*>(&text[0]), num_bytes);
     );
+
+    auto mem_peak = malloc_count_peak();
     verbose("Memory peak: ", malloc_count_peak());
 
-    verbose("CST size: ", size_in_bytes(cst));
+    size_t space = 0;
+    if(args.memo){
+        space = size_in_bytes(cst);
+        verbose("CST size: ", space);
+    }
 
-    verbose("Storing the CST to file");
-    std::string outfile = filename + ".sdsl.cst";
-    store_to_file(cst, outfile.c_str());
+    if(args.store){
+        verbose("Storing the CST to file");
+        std::string outfile = args.filename + ".sdsl.cst";
+        store_to_file(cst, outfile.c_str());
+    }
     
+    if(args.csv)
+        std::cerr << csv(args.filename.c_str(), time, space, mem_peak) << std::endl;
 
   return 0;
-
 }

@@ -128,7 +128,13 @@ void _internal_messageError( const std::string file, const unsigned int line,
     _internal_messageError( __FILE__, __LINE__, _internal_message(args) )
 
 
-
+// converts elemens in csv format
+template <typename T>
+inline void csv_helper(std::stringstream &ss, T const &first){ss << first;}
+template <typename T, typename... Args>
+inline void csv_helper(std::stringstream &ss, T const &first, const Args &... args){ ss << first << ", "; csv_helper(ss, args...);}
+template <typename T, typename... Args>
+inline std::string csv(T const &first, const Args &... args){std::stringstream ss;csv_helper(ss, first, args...); return ss.str();}
 
 //*********************** File I/O *********************************************
 template<typename T>
@@ -226,13 +232,14 @@ void read_fasta_file(const char *filename, std::vector<T>& v){
 /*!
  * op the operation that we want to measure
  */
-#define _elapsed_time(op) \
-{ \
-  std::chrono::high_resolution_clock::time_point t_insert_start = std::chrono::high_resolution_clock::now(); \
-  op; \
-  std::chrono::high_resolution_clock::time_point t_insert_end = std::chrono::high_resolution_clock::now(); \
-  verbose("Elapsed time (s): ",std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start ).count()); \
-}
+#define _elapsed_time(op)                                                                                               \
+  ({                                                                                                                    \
+    std::chrono::high_resolution_clock::time_point t_insert_start = std::chrono::high_resolution_clock::now();          \
+    op;                                                                                                                 \
+    std::chrono::high_resolution_clock::time_point t_insert_end = std::chrono::high_resolution_clock::now();            \
+    verbose("Elapsed time (s): ", std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count()); \
+    std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count();                                \
+  })
 
 //*********************** Kasai et al. LCP construction algorithm ***************************************
 template<typename T, typename S, typename lcp_t>
@@ -273,5 +280,71 @@ void LCP_array_cyclic_text(S* s, const std::vector<T>& isa, const std::vector<T>
     }
   }
 }
+
+//*********************** Argument options ***************************************
+// struct containing command line parameters and other globals
+struct Args
+{
+  std::string filename = "";
+  size_t w = 10; // sliding window size and its default
+  bool store = false; // store the data structure in the file
+  bool memo  = false; // print the memory usage
+  bool csv   = false; // print stats on stderr in csv format
+                      // bool is_fasta = false; // read a fasta file
+};
+
+void parseArgs(int argc, char *const argv[], Args &arg)
+{
+  int c;
+  extern char *optarg;
+  extern int optind;
+
+  std::string usage("usage: " + std::string(argv[0]) + " infile [-s store] [-m memo] [-c csv]\n\n" +
+                    "Computes the pfp data structures of infile, provided that infile.parse, infile.dict, and infile.occ exists.\n" +
+                    " wsize: [integer] - sliding window size (def. 10)\n" +
+                    " store: [boolean] - store the data structure in infile.pfp.ds. (def. false)\n" +
+                    "  memo: [boolean] - print the data structure memory usage. (def. false)\n" +
+                    "   csv: [boolean] - print the stats in csv form on strerr. (def. false)\n");
+
+  std::string sarg;
+  while ((c = getopt(argc, argv, "w:smch")) != -1)
+  {
+    switch (c)
+    {
+    case 'w':
+      sarg.assign(optarg);
+      arg.w = stoi(sarg);
+      break;
+    case 's':
+      arg.store = true;
+      break;
+    case 'm':
+      arg.memo = true;
+      break;
+    case 'c':
+      arg.csv = true;
+      break;
+    // case 'f':
+    //   arg.is_fasta = true;
+    //   break;
+    case 'h':
+      error(usage);
+    case '?':
+      error("Unknown option.\n", usage);
+      exit(1);
+    }
+  }
+  // the only input parameter is the file name
+  if (argc == optind + 1)
+  {
+    arg.filename.assign(argv[optind]);
+  }
+  else
+  {
+    error("Invalid number of arguments\n", usage);
+  }
+}
+
+//********** end argument options ********************
 
 #endif /* end of include guard: _COMMON_HH */

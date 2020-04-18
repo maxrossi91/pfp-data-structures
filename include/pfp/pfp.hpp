@@ -38,6 +38,7 @@ extern "C" {
 #include<parse.hpp>
 #include <wt.hpp>
 
+template<class wt_t = pfp_wt_sdsl>
 class pf_parsing{
 public:
   struct M_entry_t{
@@ -58,7 +59,7 @@ public:
   sdsl::bit_vector::select_1_type b_bwt_select_1;
   std::vector<M_entry_t> M;
 
-  pfp_wt w_wt;
+  wt_t w_wt;
 
   sdsl::bit_vector b_p;
   sdsl::bit_vector::rank_1_type rank_b_p;
@@ -299,4 +300,8 @@ public:
     select_b_p.load(in, &b_p);
   }
 };
+
+using pf_parsing_custom = pf_parsing<pfp_wt_custom>;
+using pf_parsing_sdsl = pf_parsing<pfp_wt_sdsl>;
+
 #endif /* end of include guard: _PFP_HH */

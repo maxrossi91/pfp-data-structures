@@ -394,7 +394,7 @@ public:
   sdsl::bit_vector b_bwt;
   std::vector<M_entry_t> M;
 
-  pfp_wt w_wt;
+  pfp_wt_custom w_wt;
 
   pf_parsing( std::string filename, size_t w_):
               dict(filename),
@@ -753,7 +753,7 @@ void create_W_simple() {
   std::cout << std::endl;
 
   // create wavelet tree based on co-lexi sorted phrases
-  pfp_wt wt(indices, parse);
+  pfp_wt_custom wt(indices, parse);
 
   wt.print_leafs();
   std::cout << "> access query" << std::endl;

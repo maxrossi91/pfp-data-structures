@@ -32,10 +32,61 @@
 
 class pfp_wt {
 public:
+  using size_type = size_t;
+
+  pfp_wt() {};
+  pfp_wt(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse) {};
+
+  virtual ~pfp_wt() {};
+
+  virtual void construct(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse) = 0;
+
+  virtual uint32_t operator[] (const size_type i) = 0;
+
+  virtual size_type size() const = 0;
+
+  virtual size_type rank(const size_type i, const uint32_t c) const = 0;
+  virtual size_type select(const size_type i, const uint32_t c) const = 0;
+  virtual size_type range_count (const uint32_t t, const uint32_t b, const size_type i) const = 0;
+  virtual size_type range_count_2d (const uint32_t t, const size_type i) const = 0;
+  size_type range_select (const uint32_t t, const uint32_t b, const size_type r) const {
+    size_type lo = 1;
+    size_type hi = size();
+    assert (r > 0 && r <= range_count(t, b, hi));
+
+    size_type ans = 0;
+
+    // find r-th "filled column" in the interval (t, b)
+    // binary search using rank_count
+    while (lo <= hi) {
+      const size_type i = (lo + hi) >> 1;
+      const size_type m = range_count(t, b, i);
+
+      if (m == r) {
+        ans = i - 1;
+        hi = i - 1;
+      }
+
+      if (m < r)
+        lo = i + 1;
+      else
+        hi = i - 1;
+    }
+
+    return ans;
+  }
+
+
+  virtual size_type serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr, std::string name = "") const = 0;
+  //! Load from a stream.
+  virtual void load(std::istream &in) = 0;
+private:
+};
+
+class pfp_wt_custom : public pfp_wt {
+public:
   using wt_bv = sdsl::bit_vector;
   struct wt_node {
-  
-    typedef size_t size_type;
   
     wt_node (wt_node * parent = nullptr)
       : parent(parent)
@@ -100,19 +151,17 @@ public:
   };
 
   struct leaf_info {
-    size_t alphabet_index;
+    size_type alphabet_index;
     wt_node * leaf_link = nullptr;
   };
 
-  typedef size_t size_type;
-
-  pfp_wt()
+  pfp_wt_custom()
     : root(new wt_node())
   { }
 
-  pfp_wt(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse)
+  pfp_wt_custom(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse)
     : root(new wt_node()), alphabet(sorted_alphabet) {
-    for (size_t i = 0; i < alphabet.size(); ++i) {
+    for (size_type i = 0; i < alphabet.size(); ++i) {
       leafs[alphabet[i]].alphabet_index = i;
     }
 
@@ -121,35 +170,34 @@ public:
 
   void construct(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse) {
     alphabet = sorted_alphabet;
-    for (size_t i = 0; i < alphabet.size(); ++i) {
+    for (size_type i = 0; i < alphabet.size(); ++i) {
       leafs[alphabet[i]].alphabet_index = i;
     }
 
     create_bwt_rec(*root, alphabet.size(), 0, parse);
   }
 
-  // public interface
-  void print_leafs() {
+  void print_leafs() const {
     print_leafs_rec(root);
     std::cout << std::endl;
   }
 
   // operator[] - get phrase ID on i-th position
-  uint32_t operator[] (const size_t i) {
-    assert(i < root->bit_vector.size());
+  uint32_t operator[] (const size_type i) override {
+    // assert(i < root->bit_vector.size());
 
     return get_phrase_id(*root, i); // WT[] is 0-based
   }
 
-  size_t rank(const size_t i, const uint32_t c) const {
-    assert(i > 0 && i <= root->bit_vector.size());
+  size_type rank(const size_type i, const uint32_t c) const override {
+    // assert(i > 0 && i <= root->bit_vector.size());
 
     if (leafs.count(c) <= 0) {
       return 0;
     }
 
     wt_node * t_node = std::addressof(*root);
-    size_t j = i;
+    size_type j = i;
     uint32_t alphabet_size = alphabet.size();
     uint32_t alphabet_start = 0;
     while (!t_node->is_leaf()) {
@@ -175,11 +223,11 @@ public:
     return j;
   }
 
-  size_t select(const size_t i, const uint32_t c) const {
+  size_type select(const size_type i, const uint32_t c) const override {
     assert (i > 0 && i <= rank(size(), c));
 
     wt_node * t_node = leafs.at(c).leaf_link;
-    size_t j = i;
+    size_type j = i;
     while (!t_node->is_root()) {
       if (std::addressof(*(t_node->parent->left)) == t_node) {
         j = t_node->parent->bv_select_0(j) + 1;
@@ -193,11 +241,11 @@ public:
     return j - 1; // return index 0-based
   }
 
-  size_t size() const {
+  size_type size() const override {
     return root->bit_vector.size();
   }
 
-  size_t range_count (const size_t t, const size_t b, const size_t i) {
+  size_type range_count (const uint32_t t, const uint32_t b, const size_type i) const override {
     assert(i > 0 && i <= root->bit_vector.size());
 
     // t and b intervals of leafs
@@ -210,17 +258,17 @@ public:
     return count_b;
   }
 
-  size_t range_count_2d (const size_t t, const size_t i) {
+  size_type range_count_2d (const uint32_t t, const size_type i) const override {
     assert(i > 0 && i <= root->bit_vector.size());
 
     wt_node * node = std::addressof(*root);
-    const size_t alphabet_index = leafs.at(t).alphabet_index;
-    size_t alphabet_start = 0;
-    size_t alphabet_size = alphabet.size();
+    const size_type alphabet_index = leafs.at(t).alphabet_index;
+    size_type alphabet_start = 0;
+    size_type alphabet_size = alphabet.size();
 
-    size_t count = 0;
-    size_t j = i;
-    size_t rank_j = 0;
+    size_type count = 0;
+    size_type j = i;
+    size_type rank_j = 0;
 
     while (!node->is_leaf()) {
       const auto idx = alphabet_index - alphabet_start;
@@ -248,34 +296,6 @@ public:
     return count;
   }
 
-  size_t range_select (const size_t t, const size_t b, const size_t r) {
-    size_t lo = 1;
-    size_t hi = size();
-    assert (r > 0 && r <= range_count(t, b, hi));
-
-    size_t ans = 0;
-
-    // find r-th "filled column" in the interval (t, b)
-    // binary search using rank_count
-    while (lo <= hi) {
-      const size_t i = (lo + hi) >> 1;
-      const size_t m = range_count(t, b, i);
-
-      if (m == r) {
-        ans = i - 1;
-        hi = i - 1;
-      }
-
-      if (m < r)
-        lo = i + 1;
-      else
-        hi = i - 1;
-    }
-
-    return ans;
-  }
-
-
   size_type serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr, std::string name = "") const
   {
     sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
@@ -285,7 +305,7 @@ public:
     written_bytes += root->serialize(out, child, "root");
     
     std::vector<uint32_t> tmp_phrase_ids;
-    std::vector<size_t> tmp_alphbet_indices;
+    std::vector<size_type> tmp_alphbet_indices;
 
 
     for (const auto &kv : leafs){
@@ -308,12 +328,12 @@ public:
     root->load(in);
 
     std::vector<uint32_t> tmp_phrase_ids;
-    std::vector<size_t> tmp_alphbet_indices;
+    std::vector<size_type> tmp_alphbet_indices;
 
     sdsl::load(tmp_phrase_ids, in);
     sdsl::load(tmp_alphbet_indices, in);
 
-    for(size_t i = 0; i < tmp_phrase_ids.size(); ++i){
+    for(size_type i = 0; i < tmp_phrase_ids.size(); ++i){
       leaf_info tmp_info;
       tmp_info.alphabet_index = tmp_alphbet_indices[i];
       leafs[tmp_phrase_ids[i]] = tmp_info;
@@ -338,13 +358,13 @@ public:
     vis(*root,leafs);
   }
 
-  std::vector<uint32_t> alphabet;
 private:
+  std::vector<uint32_t> alphabet;
   // root node of wavelet tree
   std::unique_ptr<wt_node> root;
   std::map<uint32_t, leaf_info> leafs;
 
-  uint32_t get_phrase_id(const wt_node & node, const size_t i) {
+  uint32_t get_phrase_id(const wt_node & node, const size_type i) const {
     if (node.is_leaf()) {
       return node.phrase_id;
     }
@@ -374,7 +394,7 @@ private:
     std::vector<uint32_t> parse_left;
     std::vector<uint32_t> parse_right;
 
-    for (size_t i = 0; i < parse.size(); i++) {
+    for (size_type i = 0; i < parse.size(); i++) {
       // TODO: direct access data structure
       const auto idx = leafs.at(parse[i]).alphabet_index - alpha_start;
 
@@ -400,7 +420,7 @@ private:
     create_bwt_rec(*(w_structure.right), alpha_size - tres, alpha_start + tres, parse_right);
   }
 
-  void print_leafs_rec(const std::unique_ptr<wt_node> & node) {
+  void print_leafs_rec(const std::unique_ptr<wt_node> & node) const {
     if (node->is_leaf()) {
       std::cout << node->phrase_id << " | ";
     }
@@ -409,6 +429,87 @@ private:
       print_leafs_rec(node->right);
     }
   }
+};
+
+class pfp_wt_sdsl : public pfp_wt {
+public:
+  pfp_wt_sdsl()
+  { }
+
+  pfp_wt_sdsl(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse) {
+    construct(sorted_alphabet, parse);
+  }
+
+  void construct(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse) override {
+    sdsl::int_vector<> parse_translate(parse.size(), 0);
+    translate.resize(sorted_alphabet.size(), 0);
+    i_translate.resize(sorted_alphabet.size(), 0);
+
+    for (size_type i = 0; i < sorted_alphabet.size(); ++i) {
+      translate[sorted_alphabet[i] - 1] = i;
+      i_translate[i] = sorted_alphabet[i];
+    }
+
+    for (size_type i = 0; i < parse.size(); ++i) {
+      parse_translate[i] = translate[parse[i] - 1];
+    }
+
+    sdsl::construct_im(wt_i, parse_translate);
+  }
+
+  // operator[] - get phrase ID on i-th position
+  uint32_t operator[] (const size_type i) override {
+    return i_translate[wt_i[i]];
+  }
+
+  size_type size() const override {
+    return wt_i.size();
+  }
+
+  size_type rank(const size_type i, const uint32_t c) const override {
+    wt_i.rank(i, translate[c - 1]);
+  }
+
+  size_type select(const size_type i, const uint32_t c) const override {
+    wt_i.select(i, translate[c - 1]);
+  }
+
+  size_type range_count (const uint32_t t, const uint32_t b, const size_type i) const override {
+    const auto count_b = range_count_2d(b, i);
+  
+    if (t >= 1)
+      return count_b - range_count_2d(t - 1, i);
+    
+    return count_b;
+  }
+
+  size_type range_count_2d (const uint32_t t, const size_type i) const override {
+    return wt_i.range_search_2d(0, i - 1, 0, t, false).first;
+  }
+
+  size_type serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr, std::string name = "") const override {
+    sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
+    size_type written_bytes = 0;
+
+    written_bytes += wt_i.serialize(out, child, "wt_i");
+    written_bytes += sdsl::serialize(i_translate, out, child, "i_translate");
+    written_bytes += sdsl::serialize(translate, out, child, "translate");
+
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+  }
+
+  //! Load from a stream.
+  void load(std::istream &in) override {
+    wt_i.load(in);
+    sdsl::load(i_translate, in);
+    sdsl::load(translate, in);
+  }
+
+private:
+  sdsl::wt_int<> wt_i;
+  std::vector<uint32_t> i_translate;
+  std::vector<uint32_t> translate;
 };
 
 #endif /* end of include guard: _PFP_WT_HH */

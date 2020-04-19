@@ -32,13 +32,14 @@
 
 #include<pfp.hpp>
 
+template<class wt_t = pfp_wt_sdsl>
 class pfp_lce_support{
 protected:
 public:
-  pf_parsing& pfp;
+  pf_parsing<wt_t>& pfp;
 
   // This has to be changed using pfp_dictionary and pfp_parse
-  pfp_lce_support(pf_parsing& pfp_):
+  pfp_lce_support(pf_parsing<wt_t>& pfp_):
                     pfp(pfp_)
   { }
 

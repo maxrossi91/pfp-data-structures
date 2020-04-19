@@ -32,6 +32,7 @@
 #include <sdsl/suffix_trees.hpp>
 
 #include <common.hpp>
+#include <strdup.hpp>
 #include <gtest/gtest.h>
 #include <pfp.hpp>
 #include <lce_support.hpp>
@@ -116,7 +117,7 @@ TEST(lce_construct_test, paper_example)
     TEST_COUT << "Begin paper test" << std::endl;
 
 
-    pf_parsing pf(dict2,parse,frequencies, w);
+    pf_parsing<> pf(dict2,parse,frequencies, w);
     TEST_COUT << "Pfp built" << std::endl;
 
     // TEST n
@@ -147,8 +148,8 @@ TEST(lce_construct_test, paper_example)
     }
     TEST_COUT << "Test b_p" << std::endl;
 
-    pfp_lce_support lce_ds(pf);
-    pfp_sa_support sa_ds(pf);
+    pfp_lce_support<> lce_ds(pf);
+    pfp_sa_support<> sa_ds(pf);
 
     // TEST lce_ds
     std::vector<char> tmp_text = {'#', 'G', 'A', 'T', 'T', 'A', 'C', 'A', 'T', '#',
@@ -188,9 +189,9 @@ TEST(lce_construct_test, paper_example)
 TEST(lce_construct_test,lce_construct){
 
     size_t w = 10;
-    pf_parsing pf(test_file, w);
-    pfp_lce_support lce_ds(pf);
-    pfp_sa_support sa_ds(pf);
+    pf_parsing<> pf(test_file, w);
+    pfp_lce_support<> lce_ds(pf);
+    pfp_sa_support<> sa_ds(pf);
 
     // TEST lce_ds
     std::vector<char> text;

@@ -53,6 +53,9 @@ public:
 
   typedef size_t size_type;
 
+  // Default constructor for load
+  parse() {}
+
   parse(  std::vector<uint32_t>& p_,
           size_t alphabet_size_,
           bool saP_flag_ = true,

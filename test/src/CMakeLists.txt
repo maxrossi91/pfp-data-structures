@@ -19,8 +19,16 @@ target_link_libraries(lce_test common pfp gsacak sdsl divsufsort divsufsort64 ma
 add_executable(sa_test sa_test.cpp)
 target_link_libraries(sa_test common pfp gsacak sdsl divsufsort divsufsort64 malloc_count gtest_main pthread)
 
+add_executable(pfp_test pfp_test.cpp)
+target_link_libraries(pfp_test common pfp gsacak sdsl divsufsort divsufsort64 malloc_count gtest_main pthread)
+
 add_executable(lce_benchmark lce_benchmark.cpp)
 target_link_libraries(lce_benchmark common pfp gsacak sdsl divsufsort divsufsort64 malloc_count benchmark pthread)
 
 add_executable(sa_benchmark sa_benchmark.cpp)
 target_link_libraries(sa_benchmark common pfp gsacak sdsl divsufsort divsufsort64 malloc_count benchmark pthread)
+
+
+add_executable(pfp_load_test pfp_load_test.cpp)
+target_link_libraries(pfp_load_test common pfp gsacak sdsl malloc_count)
+

@@ -49,12 +49,14 @@ std::string test_file = "../data/yeast.fasta";
 static void BM_pfp_sa_queries(benchmark::State &state)
 {
     // Perform setup here
-    size_t w = 10;
-    pf_parsing pf(test_file,w);
+    std::string filename = test_file + ".pf.ds";
+
+    pf_parsing pf;
+    sdsl::load_from_file(pf,filename);
+
     pfp_lce_support lce_ds(pf);
     pfp_sa_support sa_ds(pf);
 
-    verbose("Initialization pfp done");
 
     for (auto _ : state)
     {
@@ -63,31 +65,25 @@ static void BM_pfp_sa_queries(benchmark::State &state)
             benchmark::DoNotOptimize(sa_ds.sa(i));
     }
 
-    state.counters.insert({{"size in B", sdsl::size_in_bytes(pf)}, {"nops", sa_ds.size() - 1}});
-    verbose("Queries done");
+    state.counters.insert({{"nops", sa_ds.size() - 1}});
 }
 BENCHMARK(BM_pfp_sa_queries);
 
 static void BM_sdsl_sa_queries(benchmark::State &state)
 {
     // Perform setup here
-    std::vector<char> text;
-    read_fasta_file(test_file.c_str(), text);
-
-    uint8_t num_bytes = 1;
+    std::string filename = test_file + ".sdsl.cst";
 
     sdsl::cst_sct3<sdsl::csa_wt<sdsl::wt_huff<sdsl::rrr_vector<>>>, sdsl::lcp_support_sada<>> cst;
-    sdsl::construct_im(cst, static_cast<const char *>(&text[0]), num_bytes);
+    sdsl::load_from_file(cst, filename);
 
-    state.counters.insert({{"size in B", sdsl::size_in_bytes(cst)}, {"nops", cst.csa.size() - 1}});
-    verbose("Initialization sdsl done");
+    state.counters.insert({{"nops", cst.csa.size() - 1}});
     for (auto _ : state)
     {
         // This code gets timed
         for (int i = 0; i < cst.csa.size(); ++i)
             benchmark::DoNotOptimize(cst.csa[i]);
     }
-    verbose("Queries done");
 }
 // Register the function as a benchmark
 BENCHMARK(BM_sdsl_sa_queries);

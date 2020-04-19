@@ -63,6 +63,9 @@ public:
 
   typedef size_t size_type;
 
+  // default constructor for load.
+  dictionary() {}
+
   dictionary( std::vector<uint8_t>& d_,
               size_t w,
               bool saD_flag_ = true,

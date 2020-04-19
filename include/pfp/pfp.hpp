@@ -66,6 +66,9 @@ public:
 
   typedef size_t size_type;
 
+  // Default constructor for load
+  pf_parsing() {}
+
   pf_parsing(std::vector<uint8_t> &d_,
              std::vector<uint32_t> &p_,
              std::vector<uint32_t> &freq_,
@@ -252,7 +255,7 @@ public:
     dict.daD.clear();
     dict.colex_daD.clear();
     dict.colex_id.clear();
-    pars.saP.clear();
+    // pars.saP.clear(); // It is needed in sa_support
     //    dict.rmq_colex_daD.clear();
     //    dict.rMq_colex_daD.clear();
   }

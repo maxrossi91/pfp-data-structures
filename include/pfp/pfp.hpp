@@ -67,6 +67,9 @@ public:
 
   typedef size_t size_type;
 
+  // Default constructor for load
+  pf_parsing() {}
+
   pf_parsing(std::vector<uint8_t> &d_,
              std::vector<uint32_t> &p_,
              std::vector<uint32_t> &freq_,
@@ -253,7 +256,7 @@ public:
     dict.daD.clear();
     dict.colex_daD.clear();
     dict.colex_id.clear();
-    pars.saP.clear();
+    // pars.saP.clear(); // It is needed in sa_support
     //    dict.rmq_colex_daD.clear();
     //    dict.rMq_colex_daD.clear();
   }
@@ -299,9 +302,24 @@ public:
     rank_b_p.load(in, &b_p);
     select_b_p.load(in, &b_p);
   }
+
+  std::string filesuffix() const
+  {
+    return ".pf.ds";
+  }
+
+
 };
 
-using pf_parsing_custom = pf_parsing<pfp_wt_custom>;
-using pf_parsing_sdsl = pf_parsing<pfp_wt_sdsl>;
+
+// Specialization for pfp_wt_sdsl
+template <>
+std::string pf_parsing<pfp_wt_sdsl>::filesuffix() const
+{
+  return ".pf.wt_sdsl.ds";
+}
+
+  using pf_parsing_custom = pf_parsing<pfp_wt_custom>;
+  using pf_parsing_sdsl = pf_parsing<pfp_wt_sdsl>;
 
 #endif /* end of include guard: _PFP_HH */

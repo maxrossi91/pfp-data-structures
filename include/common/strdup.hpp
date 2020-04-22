@@ -28,7 +28,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-extern char * strdup(const char *s)
+extern char *strdup(const char *s) throw()
 {
     size_t len = strlen (s) + 1;
     char *result = (char*) malloc (len);

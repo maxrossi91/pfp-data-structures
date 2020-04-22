@@ -45,13 +45,13 @@ int main(int argc, char* const argv[]) {
   parseArgs(argc, argv, args);
 
 
-  verbose("Window size set to: " , args.w);
+  // verbose("Window size set to: " , args.w);
 
-  pf_parsing pf1(args.filename, args.w);
+  // pf_parsing pf1(args.filename, args.w);
 
-  verbose("Storing the PFP to file");
+  // verbose("Storing the PFP to file");
   std::string outfile = args.filename + ".pf.ds";
-  sdsl::store_to_file(pf1, outfile.c_str());
+  // sdsl::store_to_file(pf1, outfile.c_str());
 
   verbose("Loading PFP data structures from:", args.filename);
   std::chrono::high_resolution_clock::time_point t_insert_start = std::chrono::high_resolution_clock::now();
@@ -74,8 +74,7 @@ int main(int argc, char* const argv[]) {
 
   for (int i = 0; i < pfp_sa.size(); ++i)
   {
-    info(i);
-    auto j = pfp_sa.sa(i);
+    info(pfp_sa.sa(i));
   }
 
   return 0;

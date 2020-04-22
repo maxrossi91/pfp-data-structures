@@ -4,6 +4,9 @@
 add_executable(ds_building ds_building.cpp)
 target_link_libraries(ds_building common strdup pfp gsacak sdsl malloc_count)
 
+add_executable(ds_building_custom ds_building_custom.cpp)
+target_link_libraries(ds_building_custom common strdup pfp gsacak sdsl malloc_count)
+
 add_executable(sdsl_baseline_cst sdsl_baseline_cst.cpp)
 target_link_libraries(sdsl_baseline_cst common strdup sdsl divsufsort divsufsort64 malloc_count)
 

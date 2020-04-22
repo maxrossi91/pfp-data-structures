@@ -49,7 +49,7 @@ extern "C" {
 // static void BM_pfp_sa_queries(benchmark::State &state)
 // {
 //     // Perform setup here
-//     std::string filename = test_file + ".pf.ds";
+//     std::string filename = test_file + pf.filesuffix();
 
 //     pf_parsing pf;
 //     sdsl::load_from_file(pf,filename);
@@ -114,7 +114,7 @@ extern "C" {
 //         {
 //             prev_pfp = s;
             
-//             std::string filename = prev_pfp + ".pf.ds";
+//             std::string filename = prev_pfp + pf.filesuffix();
 //             sdsl::load_from_file(pf,filename);
 //         }
 //         return pf;
@@ -156,7 +156,7 @@ void BM_pfp_sa(benchmark::State &st, std::string s)
     // auto pf = setup->get_pfp(s);
 
     pf_parsing<> pf;
-    std::string filename = s + ".pf.ds";
+    std::string filename = s + pf.filesuffix();
     sdsl::load_from_file(pf, filename);
 
     pfp_sa_support<> pf_sa(pf);

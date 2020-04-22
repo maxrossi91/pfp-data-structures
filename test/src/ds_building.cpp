@@ -85,7 +85,7 @@ int main(int argc, char* const argv[]) {
 
   if(args.store){
     verbose("Storing the PFP to file");
-    std::string outfile = args.filename + ".pf.ds";
+    std::string outfile = args.filename + pf.filesuffix();
     sdsl::store_to_file(pf, outfile.c_str());
   }
 

@@ -303,7 +303,21 @@ public:
     select_b_p.load(in, &b_p);
   }
 
+  std::string filesuffix() const
+  {
+    return ".pf.ds";
+  }
+
+
 };
+
+
+// Specialization for pfp_wt_sdsl
+template <>
+std::string pf_parsing<pfp_wt_sdsl>::filesuffix() const
+{
+  return ".pf.wt_sdsl.ds";
+}
 
   using pf_parsing_custom = pf_parsing<pfp_wt_custom>;
   using pf_parsing_sdsl = pf_parsing<pfp_wt_sdsl>;

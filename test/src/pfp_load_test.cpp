@@ -50,13 +50,14 @@ int main(int argc, char* const argv[]) {
   // pf_parsing pf1(args.filename, args.w);
 
   // verbose("Storing the PFP to file");
-  std::string outfile = args.filename + ".pf.ds";
   // sdsl::store_to_file(pf1, outfile.c_str());
 
   verbose("Loading PFP data structures from:", args.filename);
   std::chrono::high_resolution_clock::time_point t_insert_start = std::chrono::high_resolution_clock::now();
 
   pf_parsing<> pf;
+  std::string outfile = args.filename + pf.filesuffix();
+
   sdsl::load_from_file(pf,outfile);
 
   std::chrono::high_resolution_clock::time_point t_insert_end = std::chrono::high_resolution_clock::now();

@@ -93,7 +93,7 @@ void BM_pfp_sa(benchmark::State &st, std::string s)
     // auto pf = setup->get_pfp(s);
 
     pf_parsing<> pf;
-    std::string filename = s + ".pf.ds";
+    std::string filename = s + pf.filesuffix();
     sdsl::load_from_file(pf, filename);
 
     pfp_sa_support<> pf_sa(pf);
@@ -149,7 +149,7 @@ void BM_pfp_lcp(benchmark::State &st, std::string s)
     // auto pf = setup->get_pfp(s);
 
     pf_parsing<> pf;
-    std::string filename = s + ".pf.ds";
+    std::string filename = s + pf.filesuffix();
     sdsl::load_from_file(pf, filename);
 
     pfp_sa_support<> pf_sa(pf);
@@ -205,7 +205,7 @@ void BM_pfp_lce(benchmark::State &st, std::string s)
     // auto pf = setup->get_pfp(s);
 
     pf_parsing<> pf;
-    std::string filename = s + ".pf.ds";
+    std::string filename = s + pf.filesuffix();
     sdsl::load_from_file(pf, filename);
 
     pfp_sa_support<> pf_sa(pf);
@@ -293,7 +293,7 @@ void BM_pfp_thresholds(benchmark::State &st, std::string s)
     // auto pf = setup->get_pfp(s);
 
     pf_parsing<> pf;
-    std::string filename = s + ".pf.ds";
+    std::string filename = s + pf.filesuffix();
     sdsl::load_from_file(pf, filename);
 
     pfp_sa_support<> sa_ds(pf);

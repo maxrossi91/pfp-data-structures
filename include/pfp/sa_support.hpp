@@ -34,11 +34,12 @@
 #include <wt.hpp>
 #include <lce_support.hpp>
 
+template<class wt_t = pfp_wt_sdsl>
 class pfp_sa_support {
 public:
-  pf_parsing& pfp;
+  pf_parsing<wt_t>& pfp;
 
-  pfp_sa_support(pf_parsing & pfp_)
+  pfp_sa_support(pf_parsing<wt_t> & pfp_)
     : pfp(pfp_)
   { }
 

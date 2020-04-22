@@ -127,7 +127,7 @@ TEST(sa_construct_test, paper_example)
 
     TEST_COUT << "Begin paper test" << std::endl;
 
-    pf_parsing pf(dict2,parse,frequencies, w);
+    pf_parsing<> pf(dict2,parse,frequencies, w);
     TEST_COUT << "Pfp built" << std::endl;
 
     // TEST n
@@ -209,7 +209,7 @@ TEST(sa_construct_test, paper_example)
 
     TEST_COUT << "Begin paper test for p1" << std::endl;
 
-    pf_parsing pf1;
+    pf_parsing<> pf1;
     sdsl::load_from_file(pf1, outfile);
     TEST_COUT << "Pfp built" << std::endl;
 
@@ -277,8 +277,8 @@ TEST(sa_construct_test, paper_example)
 
 
 
-    pfp_lce_support lce_pf(pf);
-    pfp_lce_support lce_pf1(pf1);
+    pfp_lce_support<> lce_pf(pf);
+    pfp_lce_support<> lce_pf1(pf1);
 
     for (int i = 0; i < text.size() - 1; ++i)
     {
@@ -286,8 +286,8 @@ TEST(sa_construct_test, paper_example)
     }
     TEST_COUT << "Test LCE ds" << std::endl;
 
-    pfp_sa_support sa_pf(pf);
-    pfp_sa_support sa_pf1(pf1);
+    pfp_sa_support<> sa_pf(pf);
+    pfp_sa_support<> sa_pf1(pf1);
 
     for (int i = 0; i < sa_pf.size(); ++i)
     {
@@ -299,8 +299,8 @@ TEST(sa_construct_test, paper_example)
 TEST(sa_construct_test,sa_construct){
 
     size_t w = 10;
-    pf_parsing pf(test_file, w);
-    pfp_sa_support sa_ds(pf);
+    pf_parsing<> pf(test_file, w);
+    pfp_sa_support<> sa_ds(pf);
 
     // TEST sa_ds
     std::vector<char> text;

@@ -32,6 +32,7 @@
 #include <sdsl/suffix_trees.hpp>
 
 #include <common.hpp>
+#include <strdup.hpp>
 #include <gtest/gtest.h>
 #include <pfp.hpp>
 #include <lce_support.hpp>
@@ -116,7 +117,7 @@ TEST(lce_construct_test, paper_example)
     TEST_COUT << "Begin paper test" << std::endl;
 
 
-    pf_parsing pf(dict2,parse,frequencies, w);
+    pf_parsing<> pf(dict2,parse,frequencies, w);
     TEST_COUT << "Pfp built" << std::endl;
 
     // TEST n
@@ -147,8 +148,8 @@ TEST(lce_construct_test, paper_example)
     }
     TEST_COUT << "Test b_p" << std::endl;
 
-    pfp_lce_support lce_ds(pf);
-    pfp_sa_support sa_ds(pf);
+    pfp_lce_support<> lce_ds(pf);
+    pfp_sa_support<> sa_ds(pf);
 
     // TEST lce_ds
     std::vector<char> tmp_text = {'#', 'G', 'A', 'T', 'T', 'A', 'C', 'A', 'T', '#',
@@ -238,13 +239,16 @@ TEST(threshold_construct_test, paper_example)
     }
     std::sort(rev_dict.begin(), rev_dict.end());
 
+
     std::vector<uint32_t> frequencies{0, 1, 2, 1, 1, 1};
     size_t w = 2;
+
+
 
     TEST_COUT << "Begin paper test" << std::endl;
 
     TEST_COUT << "Building Pfp" << std::endl;
-    pf_parsing pf(dict2, parse, frequencies, w);
+    pf_parsing<> pf(dict2, parse, frequencies, w);
 
 
     // TEST sa_ds
@@ -254,8 +258,8 @@ TEST(threshold_construct_test, paper_example)
 
     uint8_t num_bytes = 1;
     // build cst of the Text
-    pfp_lce_support lce_ds(pf);
-    pfp_sa_support sa_ds(pf);
+    pfp_lce_support<> lce_ds(pf);
+    pfp_sa_support<> sa_ds(pf);
 
     // build cst of the Text
     sdsl::cst_sct3<sdsl::csa_wt<sdsl::wt_huff<sdsl::rrr_vector<>>>, sdsl::lcp_support_sada<>> cst;

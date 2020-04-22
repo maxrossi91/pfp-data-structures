@@ -56,7 +56,7 @@ int main(int argc, char* const argv[]) {
   verbose("Loading PFP data structures from:", args.filename);
   std::chrono::high_resolution_clock::time_point t_insert_start = std::chrono::high_resolution_clock::now();
 
-  pf_parsing pf;
+  pf_parsing<> pf;
   sdsl::load_from_file(pf,outfile);
 
   std::chrono::high_resolution_clock::time_point t_insert_end = std::chrono::high_resolution_clock::now();
@@ -66,11 +66,11 @@ int main(int argc, char* const argv[]) {
   auto time = std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count();
 
   verbose("Providing LCE support");
-  pfp_lce_support lce_ds(pf);
+  pfp_lce_support<> lce_ds(pf);
 
 
   verbose("Providing SA support");
-  pfp_sa_support pfp_sa(pf);
+  pfp_sa_support<> pfp_sa(pf);
 
   for (int i = 0; i < pfp_sa.size(); ++i)
   {

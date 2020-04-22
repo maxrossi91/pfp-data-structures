@@ -31,6 +31,7 @@
 #include <sdsl/suffix_arrays.hpp>
 
 #include <common.hpp>
+#include <strdup.hpp>
 #include <gtest/gtest.h>
 #include <pfp.hpp>
 #include <sa_support.hpp>
@@ -127,7 +128,8 @@ TEST(sa_construct_test, paper_example)
 
     TEST_COUT << "Begin paper test" << std::endl;
 
-    pf_parsing pf(dict2,parse,frequencies, w);
+    pf_parsing<> pf(dict2, parse, frequencies, w);
+    pf_parsing<pfp_wt_custom> pf_c(dict2, parse, frequencies, w);
     TEST_COUT << "Pfp built" << std::endl;
 
     // TEST n
@@ -194,8 +196,11 @@ TEST(sa_construct_test, paper_example)
     };
     std::sort(sa.begin(), sa.end(), cyclic_sort);
 
-    pfp_lce_support lce_ds(pf);
-    pfp_sa_support pf_sa(pf);
+    pfp_lce_support<> lce_ds(pf);
+    pfp_sa_support<> pf_sa(pf);
+
+    pfp_lce_support<pfp_wt_custom> lce_ds_sdsl(pf_c);
+    pfp_sa_support<pfp_wt_custom> pf_sa_sdsl(pf_c);
 
     // TEST BWT(P) - wavelet tree
     for (size_t i = 0; i < pf.w_wt.size(); ++i)
@@ -204,10 +209,22 @@ TEST(sa_construct_test, paper_example)
     }
     TEST_COUT << "Test BWT(P)" << std::endl;
 
+    // TEST BWT(P) - wavelet tree
+    for (size_t i = 0; i < pf.w_wt.size(); ++i)
+    {
+        EXPECT_EQ(pf.w_wt[i], pf_c.w_wt[i]) << "at position: " << i;
+    }
+    TEST_COUT << "Test comparing WT custom vs. SDSL" << std::endl;
+
     for (size_t i = 0; i < pf_sa.size(); ++i) {
         EXPECT_EQ(pf_sa.sa(i), sa[i]) << "at position: " << i;
     }
     TEST_COUT << "Test PFP SA" << std::endl;
+
+    for (size_t i = 0; i < pf_sa.size(); ++i) {
+        EXPECT_EQ(pf_sa.sa(i), pf_sa_sdsl.sa(i)) << "at position: " << i;
+    }
+    TEST_COUT << "Test PFP comparing SA SDSL vs. custom" << std::endl;
 
 
     uint8_t num_bytes = 1;
@@ -239,10 +256,9 @@ TEST(sa_construct_test, paper_example)
 }
 
 TEST(sa_construct_test,sa_construct){
-
     size_t w = 10;
-    pf_parsing pf(test_file, w);
-    pfp_sa_support sa_ds(pf);
+    pf_parsing<> pf(test_file, w);
+    pfp_sa_support<> sa_ds(pf);
 
     // TEST sa_ds
     std::vector<char> text;

@@ -92,11 +92,11 @@ void BM_pfp_sa(benchmark::State &st, std::string s)
     // Setup *setup = Setup::PerformSetup();
     // auto pf = setup->get_pfp(s);
 
-    pf_parsing pf;
+    pf_parsing<> pf;
     std::string filename = s + ".pf.ds";
     sdsl::load_from_file(pf, filename);
 
-    pfp_sa_support pf_sa(pf);
+    pfp_sa_support<> pf_sa(pf);
 
     int n_iter = st.range(0);
 
@@ -148,12 +148,12 @@ void BM_pfp_lcp(benchmark::State &st, std::string s)
     // Setup *setup = Setup::PerformSetup();
     // auto pf = setup->get_pfp(s);
 
-    pf_parsing pf;
+    pf_parsing<> pf;
     std::string filename = s + ".pf.ds";
     sdsl::load_from_file(pf, filename);
 
-    pfp_sa_support pf_sa(pf);
-    pfp_lce_support pf_lce(pf);
+    pfp_sa_support<> pf_sa(pf);
+    pfp_lce_support<> pf_lce(pf);
 
     int n_iter = st.range(0);
 
@@ -204,12 +204,12 @@ void BM_pfp_lce(benchmark::State &st, std::string s)
     // Setup *setup = Setup::PerformSetup();
     // auto pf = setup->get_pfp(s);
 
-    pf_parsing pf;
+    pf_parsing<> pf;
     std::string filename = s + ".pf.ds";
     sdsl::load_from_file(pf, filename);
 
-    pfp_sa_support pf_sa(pf);
-    pfp_lce_support pf_lce(pf);
+    pfp_sa_support<> pf_sa(pf);
+    pfp_lce_support<> pf_lce(pf);
 
     int n_iter = st.range(0);
 
@@ -292,12 +292,12 @@ void BM_pfp_thresholds(benchmark::State &st, std::string s)
     // Setup *setup = Setup::PerformSetup();
     // auto pf = setup->get_pfp(s);
 
-    pf_parsing pf;
+    pf_parsing<> pf;
     std::string filename = s + ".pf.ds";
     sdsl::load_from_file(pf, filename);
 
-    pfp_sa_support sa_ds(pf);
-    pfp_lce_support lce_ds(pf);
+    pfp_sa_support<> sa_ds(pf);
+    pfp_lce_support<> lce_ds(pf);
 
     int n_iter = sa_ds.size();
 

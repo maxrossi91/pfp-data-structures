@@ -32,7 +32,7 @@
 
 #include<pfp.hpp>
 
-template<class wt_t = pfp_wt_sdsl>
+template<class wt_t = pfp_wt_custom>
 class pfp_lce_support{
 protected:
 public:

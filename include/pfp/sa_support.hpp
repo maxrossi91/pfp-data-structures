@@ -34,7 +34,7 @@
 #include <wt.hpp>
 #include <lce_support.hpp>
 
-template<class wt_t = pfp_wt_sdsl>
+template<class wt_t = pfp_wt_custom>
 class pfp_sa_support {
 public:
   pf_parsing<wt_t>& pfp;

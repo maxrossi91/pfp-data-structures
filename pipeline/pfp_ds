@@ -23,6 +23,7 @@ ds_dirname      = os.path.join(dirname, "test/src")
 parse_exe       = os.path.join(bigbwt_dirname, "newscan.x")
 parseNT_exe     = os.path.join(bigbwt_dirname, "newscanNT.x")
 build_pfp_ds          = os.path.join(ds_dirname, "ds_building")
+build_pfp_ds64          = os.path.join(ds_dirname, "ds_building64")
 
 
 def main():
@@ -94,9 +95,18 @@ def main():
 
     # ----------- computation of the PFP data structures
     start = time.time()
-    command = "{exe} {file} -w {wsize}".format(
-              exe = os.path.join(args.bigbwt_dir,build_pfp_ds),
-              wsize=args.wsize, file=args.input)
+    parse_size = os.path.getsize(args.input+".parse")/4
+    dictionary_size = os.path.getsize(args.input+".dict")
+
+    if(parse_size >=  (2**31-1) or dictionary_size >=  (2**31-1) ):
+      command = "{exe} {file} -w {wsize}".format(
+                exe = os.path.join(args.bigbwt_dir,build_pfp_ds64),
+                wsize=args.wsize, file=args.input)
+    else:
+      command = "{exe} {file} -w {wsize}".format(
+          exe = os.path.join(args.bigbwt_dir,build_pfp_ds),
+          wsize=args.wsize, file=args.input)
+
     if args.s: command += " -s"
     if args.m: command += " -m"
     

@@ -38,7 +38,7 @@ extern "C" {
 #include<parse.hpp>
 #include <wt.hpp>
 
-template<class wt_t = pfp_wt_sdsl>
+template<class wt_t = pfp_wt_custom>
 class pf_parsing{
 public:
   struct M_entry_t{

@@ -42,7 +42,7 @@ public:
   std::vector<uint8_t> d;
   std::vector<uint_t> saD;
   std::vector<uint_t> isaD;
-  std::vector<int_t> daD;
+  std::vector<int_da> daD;
   std::vector<int_t> lcpD;
   sdsl::rmq_succinct_sct<> rmq_lcp_D;
   sdsl::bit_vector b_d; // Starting position of each phrase in D

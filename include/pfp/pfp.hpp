@@ -269,7 +269,7 @@ public:
 
     written_bytes += dict.serialize(out, child, "dictionary");
     written_bytes += pars.serialize(out, child, "parse");
-    written_bytes += sdsl::serialize(freq, out, child, "frequencies");
+    written_bytes += my_serialize(freq, out, child, "frequencies");
     written_bytes += sdsl::write_member(n, out, child, "n");
     written_bytes += sdsl::write_member(w, out, child, "w");
     written_bytes += b_bwt.serialize(out, child, "b_bwt");
@@ -280,6 +280,19 @@ public:
     written_bytes += b_p.serialize(out, child, "b_p");
     written_bytes += rank_b_p.serialize(out, child, "rank_b_p");
     written_bytes += select_b_p.serialize(out, child, "select_b_p");
+    // written_bytes += dict.serialize(out, child, "dictionary");
+    // written_bytes += pars.serialize(out, child, "parse");
+    // written_bytes += sdsl::serialize(freq, out, child, "frequencies");
+    // written_bytes += sdsl::write_member(n, out, child, "n");
+    // written_bytes += sdsl::write_member(w, out, child, "w");
+    // written_bytes += b_bwt.serialize(out, child, "b_bwt");
+    // written_bytes += b_bwt_rank_1.serialize(out, child, "b_bwt_rank_1");
+    // written_bytes += b_bwt_select_1.serialize(out, child, "b_bwt_select_1");
+    // written_bytes += sdsl::serialize(M, out, child, "M");
+    // written_bytes += w_wt.serialize(out, child, "w_wt");
+    // written_bytes += b_p.serialize(out, child, "b_p");
+    // written_bytes += rank_b_p.serialize(out, child, "rank_b_p");
+    // written_bytes += select_b_p.serialize(out, child, "select_b_p");
 
     sdsl::structure_tree::add_size(child, written_bytes);
     return written_bytes;
@@ -290,7 +303,7 @@ public:
   {
     dict.load(in);
     pars.load(in);
-    sdsl::load(freq, in);
+    my_load(freq, in);
     sdsl::read_member(n, in);
     sdsl::read_member(w, in);
     b_bwt.load(in);
@@ -301,6 +314,19 @@ public:
     b_p.load(in);
     rank_b_p.load(in, &b_p);
     select_b_p.load(in, &b_p);
+    // dict.load(in);
+    // pars.load(in);
+    // sdsl::load(freq, in);
+    // sdsl::read_member(n, in);
+    // sdsl::read_member(w, in);
+    // b_bwt.load(in);
+    // b_bwt_rank_1.load(in, &b_bwt);
+    // b_bwt_select_1.load(in, &b_bwt);
+    // sdsl::load(M, in);
+    // w_wt.load(in);
+    // b_p.load(in);
+    // rank_b_p.load(in, &b_p);
+    // select_b_p.load(in, &b_p);
   }
 
   std::string filesuffix() const

@@ -353,16 +353,6 @@ void parseArgs(int argc, char *const argv[], Args &arg)
 
 //********** begin my serialize edit from sdsl ********************
 // Those are wrapper around most of the serialization functions of sdsl
-template <typename X>
-uint64_t
-my_serialize(const std::vector<X> &x,
-             std::ostream &out, sdsl::structure_tree_node *v = nullptr,
-             std::string name = "", typename std::enable_if<std::is_fundamental<X>::value>::type * = 0)
-{
-  info("my custom serialize");
-  return sdsl::serialize(x.size(), out, v, name) + my_serialize_vector(x, out, v, name);
-}
-
 
 //! Serialize each element of an std::vector
 /*!
@@ -383,7 +373,7 @@ my_serialize_vector(const std::vector<T> &vec, std::ostream &out, sdsl::structur
     sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, "std::vector<" + sdsl::util::class_name(vec[0]) + ">");
     size_t written_bytes = 0;
 
-    T *p = &vec[0];
+    const T *p = &vec[0];
     typename std::vector<T>::size_type idx = 0;
     while (idx + sdsl::conf::SDSL_BLOCK_SIZE < (vec.size()))
     {
@@ -405,12 +395,12 @@ my_serialize_vector(const std::vector<T> &vec, std::ostream &out, sdsl::structur
 }
 
 template <typename X>
-void my_load(std::vector<X> &x, std::istream &in, typename std::enable_if<std::is_fundamental<X>::value>::type * = 0)
+uint64_t
+my_serialize(const std::vector<X> &x,
+             std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+             std::string name = "", typename std::enable_if<std::is_fundamental<X>::value>::type * = 0)
 {
-  typename std::vector<X>::size_type size;
-  load(size, in);
-  x.resize(size);
-  my_load_vector(x, in);
+  return sdsl::serialize(x.size(), out, v, name) + my_serialize_vector(x, out, v, name);
 }
 
 //! Load all elements of a vector from a input stream
@@ -433,6 +423,16 @@ void my_load_vector(std::vector<T> &vec, std::istream &in, typename std::enable_
   }
   in.read((char *)p, ((vec.size()) - idx) * sizeof(T));
 }
+
+template <typename X>
+void my_load(std::vector<X> &x, std::istream &in, typename std::enable_if<std::is_fundamental<X>::value>::type * = 0)
+{
+  typename std::vector<X>::size_type size;
+  sdsl::load(size, in);
+  x.resize(size);
+  my_load_vector(x, in);
+}
+
 
 
 

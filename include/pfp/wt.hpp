@@ -301,8 +301,10 @@ public:
     sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
     size_type written_bytes = 0;
 
-    written_bytes += sdsl::serialize(alphabet, out, child, "alphabet");
+    written_bytes += my_serialize(alphabet, out, child, "alphabet");
     written_bytes += root->serialize(out, child, "root");
+    // written_bytes += sdsl::serialize(alphabet, out, child, "alphabet");
+    // written_bytes += root->serialize(out, child, "root");
     
     std::vector<uint32_t> tmp_phrase_ids;
     std::vector<size_type> tmp_alphbet_indices;
@@ -313,8 +315,10 @@ public:
       tmp_alphbet_indices.push_back(kv.second.alphabet_index);
     }
 
-    written_bytes += sdsl::serialize(tmp_phrase_ids, out, child, "phrase_ids");
-    written_bytes += sdsl::serialize(tmp_alphbet_indices, out, child, "alphbet_indices");
+    written_bytes += my_serialize(tmp_phrase_ids, out, child, "phrase_ids");
+    written_bytes += my_serialize(tmp_alphbet_indices, out, child, "alphbet_indices");
+    // written_bytes += sdsl::serialize(tmp_phrase_ids, out, child, "phrase_ids");
+    // written_bytes += sdsl::serialize(tmp_alphbet_indices, out, child, "alphbet_indices");
 
 
     sdsl::structure_tree::add_size(child, written_bytes);
@@ -324,14 +328,18 @@ public:
   //! Load from a stream.
   void load(std::istream &in)
   {
-    sdsl::load(alphabet, in);
+    my_load(alphabet, in);
     root->load(in);
+    // sdsl::load(alphabet, in);
+    // root->load(in);
 
     std::vector<uint32_t> tmp_phrase_ids;
     std::vector<size_type> tmp_alphbet_indices;
 
-    sdsl::load(tmp_phrase_ids, in);
-    sdsl::load(tmp_alphbet_indices, in);
+    my_load(tmp_phrase_ids, in);
+    my_load(tmp_alphbet_indices, in);
+    // sdsl::load(tmp_phrase_ids, in);
+    // sdsl::load(tmp_alphbet_indices, in);
 
     for(size_type i = 0; i < tmp_phrase_ids.size(); ++i){
       leaf_info tmp_info;
@@ -492,8 +500,10 @@ public:
     size_type written_bytes = 0;
 
     written_bytes += wt_i.serialize(out, child, "wt_i");
-    written_bytes += sdsl::serialize(i_translate, out, child, "i_translate");
-    written_bytes += sdsl::serialize(translate, out, child, "translate");
+    written_bytes += my_serialize(i_translate, out, child, "i_translate");
+    written_bytes += my_serialize(translate, out, child, "translate");
+    // written_bytes += sdsl::serialize(i_translate, out, child, "i_translate");
+    // written_bytes += sdsl::serialize(translate, out, child, "translate");
 
     sdsl::structure_tree::add_size(child, written_bytes);
     return written_bytes;
@@ -502,8 +512,10 @@ public:
   //! Load from a stream.
   void load(std::istream &in) override {
     wt_i.load(in);
-    sdsl::load(i_translate, in);
-    sdsl::load(translate, in);
+    my_load(i_translate, in);
+    my_load(translate, in);
+    // sdsl::load(i_translate, in);
+    // sdsl::load(translate, in);
   }
 
 private:

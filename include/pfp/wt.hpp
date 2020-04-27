@@ -49,10 +49,10 @@ public:
   virtual size_type select(const size_type i, const uint32_t c) const = 0;
   virtual size_type range_count (const uint32_t t, const uint32_t b, const size_type i) const = 0;
   virtual size_type range_count_2d (const uint32_t t, const size_type i) const = 0;
-  size_type range_select (const uint32_t t, const uint32_t b, const size_type r) const {
+  virtual size_type range_select (const uint32_t t, const uint32_t b, const size_type r) const {
     size_type lo = 1;
     size_type hi = size();
-    assert (r > 0 && r <= range_count(t, b, hi));
+    // assert (r > 0 && r <= range_count(t, b, hi));
 
     size_type ans = 0;
 
@@ -475,16 +475,95 @@ public:
   }
 
   size_type range_count (const uint32_t t, const uint32_t b, const size_type i) const override {
-    const auto count_b = range_count_2d(b, i);
-  
-    if (t >= 1)
-      return count_b - range_count_2d(t - 1, i);
-    
-    return count_b;
+    return wt_i.range_search_2d(0, i - 1, t, b, false).first;
   }
 
   size_type range_count_2d (const uint32_t t, const size_type i) const override {
     return wt_i.range_search_2d(0, i - 1, 0, t, false).first;
+  }
+
+  size_type serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr, std::string name = "") const override {
+    sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
+    size_type written_bytes = 0;
+
+    written_bytes += wt_i.serialize(out, child, "wt_i");
+    written_bytes += sdsl::serialize(i_translate, out, child, "i_translate");
+    written_bytes += sdsl::serialize(translate, out, child, "translate");
+
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+  }
+
+  //! Load from a stream.
+  void load(std::istream &in) override {
+    wt_i.load(in);
+    sdsl::load(i_translate, in);
+    sdsl::load(translate, in);
+  }
+
+private:
+  sdsl::wt_int<> wt_i;
+  std::vector<uint32_t> i_translate;
+  std::vector<uint32_t> translate;
+};
+
+class pfp_wt_sdsl_2 : public pfp_wt {
+public:
+  pfp_wt_sdsl_2()
+  { }
+
+  pfp_wt_sdsl_2(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse) {
+    construct(sorted_alphabet, parse);
+  }
+
+  void construct(const std::vector<uint32_t> & sorted_alphabet, const std::vector<uint32_t> & parse) override {
+    sdsl::int_vector<> parse_translate(parse.size(), 0);
+    translate.resize(sorted_alphabet.size(), 0);
+    i_translate.resize(sorted_alphabet.size(), 0);
+
+    for (size_type i = 0; i < sorted_alphabet.size(); ++i) {
+      translate[sorted_alphabet[i] - 1] = i;
+      i_translate[i] = sorted_alphabet[i];
+    }
+
+    for (size_type i = 0; i < parse.size(); ++i) {
+      parse_translate[i] = translate[parse[i] - 1];
+    }
+
+    sdsl::construct_im(wt_i, parse_translate);
+  }
+
+  // operator[] - get phrase ID on i-th position
+  uint32_t operator[] (const size_type i) override {
+    return i_translate[wt_i[i]];
+  }
+
+  size_type size() const override {
+    return wt_i.size();
+  }
+
+  size_type rank(const size_type i, const uint32_t c) const override {
+    wt_i.rank(i, translate[c - 1]);
+  }
+
+  size_type select(const size_type i, const uint32_t c) const override {
+    wt_i.select(i, translate[c - 1]);
+  }
+
+  size_type range_count (const uint32_t t, const uint32_t b, const size_type i) const override {
+    return wt_i.range_search_2d(0, i - 1, t, b, false).first;
+  }
+
+  size_type range_count_2d (const uint32_t t, const size_type i) const override {
+    return wt_i.range_search_2d(0, i - 1, 0, t, false).first;
+  }
+
+  size_type range_select (const uint32_t t, const uint32_t b, const size_type r) const override {
+    auto res_pair = wt_i.range_search_2d(0, size(), t, b, true);
+    const auto count = res_pair.first;
+    std::sort(res_pair.second.begin(), res_pair.second.end(), [](const std::pair<uint32_t, size_type> & a_p, const std::pair<uint32_t, size_type> & b_p) { return a_p.first < b_p.first; });
+
+    return res_pair.second[r - 1].first;
   }
 
   size_type serialize(std::ostream &out, sdsl::structure_tree_node *v = nullptr, std::string name = "") const override {

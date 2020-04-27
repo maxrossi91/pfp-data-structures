@@ -124,30 +124,30 @@ extern "C" {
 
 // Setup *Setup::setup = nullptr;
 
-template <class... ExtraArgs>
-void BM_sdsl_sa(benchmark::State &st, std::string s)
-{
+// template <class... ExtraArgs>
+// void BM_sdsl_sa(benchmark::State &st, std::string s)
+// {
 
-    // Setup *setup = Setup::PerformSetup();
-    // auto cst = setup->get_sdsl(s);
-    sdsl::cst_sct3<sdsl::csa_wt<sdsl::wt_huff<sdsl::rrr_vector<>>>, sdsl::lcp_support_sada<>> cst;
-    std::string filename = s + ".sdsl.cst";
-    sdsl::load_from_file(cst, filename);
+//     // Setup *setup = Setup::PerformSetup();
+//     // auto cst = setup->get_sdsl(s);
+//     sdsl::cst_sct3<sdsl::csa_wt<sdsl::wt_huff<sdsl::rrr_vector<>>>, sdsl::lcp_support_sada<>> cst;
+//     std::string filename = s + ".sdsl.cst";
+//     sdsl::load_from_file(cst, filename);
 
-    int n_iter = st.range(0);
+//     int n_iter = st.range(0);
 
-    if (n_iter == -1 || n_iter > cst.csa.size())
-        n_iter = cst.csa.size();
+//     if (n_iter == -1 || n_iter > cst.csa.size())
+//         n_iter = cst.csa.size();
     
-    st.counters.insert({{"n_iter", n_iter}});
-    for (auto _ : st)
-    {
-        // This code gets timed
-        for (int i = 0; i < n_iter; ++i)
-            benchmark::DoNotOptimize(cst.csa[i]);
-    }
+//     st.counters.insert({{"n_iter", n_iter}});
+//     for (auto _ : st)
+//     {
+//         // This code gets timed
+//         for (int i = 0; i < n_iter; ++i)
+//             benchmark::DoNotOptimize(cst.csa[i]);
+//     }
 
-}
+// }
 
 template <class... ExtraArgs>
 void BM_pfp_sa(benchmark::State &st, std::string s)
@@ -173,13 +173,66 @@ void BM_pfp_sa(benchmark::State &st, std::string s)
         for (int i = 0; i < n_iter; ++i)
             benchmark::DoNotOptimize(pf_sa.sa(i));
     }
-
 }
 
-BENCHMARK_CAPTURE(BM_sdsl_sa, yeast, std::string("../data/yeast.fasta"))->Range(8 << 10, 8 << 20)->Arg(-1);
-BENCHMARK_CAPTURE(BM_sdsl_sa, chr19_1, std::string("../../../data/Chr19/chr19.1.fa"))->Range(8 << 10, 8 << 20);
+template <class... ExtraArgs>
+void BM_pfp_sa_2(benchmark::State &st, std::string s)
+{
+    // Setup *setup = Setup::PerformSetup();
+    // auto pf = setup->get_pfp(s);
+
+    pf_parsing<pfp_wt_sdsl_2> pf;
+    std::string filename = s + pf.filesuffix();
+    sdsl::load_from_file(pf, filename);
+
+    pfp_sa_support<pfp_wt_sdsl_2> pf_sa(pf);
+
+    int n_iter = st.range(0);
+
+    if (n_iter == -1 || n_iter > pf_sa.size())
+        n_iter = pf_sa.size();
+    
+    st.counters.insert({{"n_iter", n_iter}});
+    for (auto _ : st)
+    {
+        // This code gets timed
+        for (int i = 0; i < n_iter; ++i)
+            benchmark::DoNotOptimize(pf_sa.sa(i));
+    }
+}
+
+// template <class... ExtraArgs>
+void BM_pfp_sa_c(benchmark::State &st, std::string s)
+{
+    // Setup *setup = Setup::PerformSetup();
+    // auto pf = setup->get_pfp(s);
+
+    pf_parsing<pfp_wt_custom> pf;
+    std::string filename = s + pf.filesuffix();
+    sdsl::load_from_file(pf, filename);
+
+    pfp_sa_support<pfp_wt_custom> pf_sa(pf);
+
+    int n_iter = st.range(0);
+
+    if (n_iter == -1 || n_iter > pf_sa.size())
+        n_iter = pf_sa.size();
+    
+    st.counters.insert({{"n_iter", n_iter}});
+    for (auto _ : st)
+    {
+        // This code gets timed
+        for (int i = 0; i < n_iter; ++i)
+            benchmark::DoNotOptimize(pf_sa.sa(i));
+    }
+}
+
+BENCHMARK_CAPTURE(BM_pfp_sa_c, yeast, std::string("../data/yeast.fasta"))->Range(8 << 10, 8 << 20); //->Arg(-1);
+BENCHMARK_CAPTURE(BM_pfp_sa_c, chr19_1, std::string("../../../data/Chr19/chr19.1.fa"))->Range(8 << 10, 8 << 20);
 BENCHMARK_CAPTURE(BM_pfp_sa, yeast, std::string("../data/yeast.fasta"))->Range(8 << 10, 8 << 20);
 BENCHMARK_CAPTURE(BM_pfp_sa, chr19_1, std::string("../../../data/Chr19/chr19.1.fa"))->Range(8 << 10, 8 << 20);
+BENCHMARK_CAPTURE(BM_pfp_sa_2, yeast, std::string("../data/yeast.fasta"))->Range(8 << 10, 8 << 20);
+BENCHMARK_CAPTURE(BM_pfp_sa_2, chr19_1, std::string("../../../data/Chr19/chr19.1.fa"))->Range(8 << 10, 8 << 20);
 
 // Run the benchmark
 BENCHMARK_MAIN();

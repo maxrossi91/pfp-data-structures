@@ -43,6 +43,8 @@
 
 #include <chrono>       // high_resolution_clock
 
+#include <sdsl/io.hpp>  // serialize and load
+#include <type_traits>  // enable_if_t and is_fundamental
 
 //**************************** From  Big-BWT ***********************************
 // special symbols used by the construction algorithm:
@@ -346,5 +348,92 @@ void parseArgs(int argc, char *const argv[], Args &arg)
 }
 
 //********** end argument options ********************
+
+
+
+//********** begin my serialize edit from sdsl ********************
+// Those are wrapper around most of the serialization functions of sdsl
+
+//! Serialize each element of an std::vector
+/*!
+ * \param vec The vector which should be serialized.
+ * \param out Output stream to which should be written.
+ * \param v   Structure tree node. Note: If all elements have the same
+ *            structure, then it is tried to combine all elements (i.e.
+ *            make one node w with size set to the cumulative sum of all
+ *           sizes of the children)
+ */
+// specialization for fundamental types
+template <class T>
+uint64_t
+my_serialize_vector(const std::vector<T> &vec, std::ostream &out, sdsl::structure_tree_node *v, std::string name, typename std::enable_if<std::is_fundamental<T>::value>::type * = 0)
+{
+  if (vec.size() > 0)
+  {
+    sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, "std::vector<" + sdsl::util::class_name(vec[0]) + ">");
+    size_t written_bytes = 0;
+
+    const T *p = &vec[0];
+    typename std::vector<T>::size_type idx = 0;
+    while (idx + sdsl::conf::SDSL_BLOCK_SIZE < (vec.size()))
+    {
+      out.write((char *)p, sdsl::conf::SDSL_BLOCK_SIZE * sizeof(T));
+      written_bytes += sdsl::conf::SDSL_BLOCK_SIZE * sizeof(T);
+      p += sdsl::conf::SDSL_BLOCK_SIZE;
+      idx += sdsl::conf::SDSL_BLOCK_SIZE;
+    }
+    out.write((char *)p, ((vec.size()) - idx) * sizeof(T));
+    written_bytes += ((vec.size()) - idx) * sizeof(T);
+
+    sdsl::structure_tree::add_size(child, written_bytes);
+    return written_bytes;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+template <typename X>
+uint64_t
+my_serialize(const std::vector<X> &x,
+             std::ostream &out, sdsl::structure_tree_node *v = nullptr,
+             std::string name = "", typename std::enable_if<std::is_fundamental<X>::value>::type * = 0)
+{
+  return sdsl::serialize(x.size(), out, v, name) + my_serialize_vector(x, out, v, name);
+}
+
+//! Load all elements of a vector from a input stream
+/*! \param vec  Vector whose elements should be loaded.
+ *  \param in   Input stream.
+ *  \par Note
+ *   The vector has to be resized prior the loading
+ *   of its elements.
+ */
+template <class T>
+void my_load_vector(std::vector<T> &vec, std::istream &in, typename std::enable_if<std::is_fundamental<T>::value>::type * = 0)
+{
+  T *p = &vec[0];
+  typename std::vector<T>::size_type idx = 0;
+  while (idx + sdsl::conf::SDSL_BLOCK_SIZE < (vec.size()))
+  {
+    in.read((char *)p, sdsl::conf::SDSL_BLOCK_SIZE * sizeof(T));
+    p += sdsl::conf::SDSL_BLOCK_SIZE;
+    idx += sdsl::conf::SDSL_BLOCK_SIZE;
+  }
+  in.read((char *)p, ((vec.size()) - idx) * sizeof(T));
+}
+
+template <typename X>
+void my_load(std::vector<X> &x, std::istream &in, typename std::enable_if<std::is_fundamental<X>::value>::type * = 0)
+{
+  typename std::vector<X>::size_type size;
+  sdsl::load(size, in);
+  x.resize(size);
+  my_load_vector(x, in);
+}
+
+
+
 
 #endif /* end of include guard: _COMMON_HH */

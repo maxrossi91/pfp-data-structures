@@ -42,7 +42,7 @@ public:
   std::vector<uint8_t> d;
   std::vector<uint_t> saD;
   std::vector<uint_t> isaD;
-  std::vector<int_t> daD;
+  std::vector<int_da> daD;
   std::vector<int_t> lcpD;
   sdsl::rmq_succinct_sct<> rmq_lcp_D;
   sdsl::bit_vector b_d; // Starting position of each phrase in D
@@ -352,19 +352,32 @@ public:
     sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
     size_type written_bytes = 0;
 
-    written_bytes += sdsl::serialize(d, out, child, "dictionary");
-    written_bytes += sdsl::serialize(saD, out, child, "saD");
-    written_bytes += sdsl::serialize(isaD, out, child, "isaD");
-    written_bytes += sdsl::serialize(daD, out, child, "daD");
-    written_bytes += sdsl::serialize(lcpD, out, child, "lcpD");
+    written_bytes += my_serialize(d, out, child, "dictionary");
+    written_bytes += my_serialize(saD, out, child, "saD");
+    written_bytes += my_serialize(isaD, out, child, "isaD");
+    written_bytes += my_serialize(daD, out, child, "daD");
+    written_bytes += my_serialize(lcpD, out, child, "lcpD");
     written_bytes += rmq_lcp_D.serialize(out, child, "rmq_lcp_D");
     written_bytes += b_d.serialize(out, child, "b_d");
     written_bytes += rank_b_d.serialize(out, child, "rank_b_d");
     written_bytes += select_b_d.serialize(out, child, "select_b_d");
-    written_bytes += sdsl::serialize(colex_daD, out, child, "colex_daD");
+    written_bytes += my_serialize(colex_daD, out, child, "colex_daD");
     written_bytes += rmq_colex_daD.serialize(out, child, "rmq_colex_daD");
     written_bytes += rMq_colex_daD.serialize(out, child, "rMq_colex_daD");
-    written_bytes += sdsl::serialize(colex_id, out, child, "colex_id");
+    written_bytes += my_serialize(colex_id, out, child, "colex_id");
+    // written_bytes += sdsl::serialize(d, out, child, "dictionary");
+    // written_bytes += sdsl::serialize(saD, out, child, "saD");
+    // written_bytes += sdsl::serialize(isaD, out, child, "isaD");
+    // written_bytes += sdsl::serialize(daD, out, child, "daD");
+    // written_bytes += sdsl::serialize(lcpD, out, child, "lcpD");
+    // written_bytes += rmq_lcp_D.serialize(out, child, "rmq_lcp_D");
+    // written_bytes += b_d.serialize(out, child, "b_d");
+    // written_bytes += rank_b_d.serialize(out, child, "rank_b_d");
+    // written_bytes += select_b_d.serialize(out, child, "select_b_d");
+    // written_bytes += sdsl::serialize(colex_daD, out, child, "colex_daD");
+    // written_bytes += rmq_colex_daD.serialize(out, child, "rmq_colex_daD");
+    // written_bytes += rMq_colex_daD.serialize(out, child, "rMq_colex_daD");
+    // written_bytes += sdsl::serialize(colex_id, out, child, "colex_id");
 
     sdsl::structure_tree::add_size(child, written_bytes);
     return written_bytes;
@@ -374,19 +387,32 @@ public:
   //! Load from a stream.
   void load(std::istream &in)
   {
-    sdsl::load(d, in);
-    sdsl::load(saD, in);
-    sdsl::load(isaD, in);
-    sdsl::load(daD, in);
-    sdsl::load(lcpD, in);
+    my_load(d, in);
+    my_load(saD, in);
+    my_load(isaD, in);
+    my_load(daD, in);
+    my_load(lcpD, in);
     rmq_lcp_D.load(in);
     b_d.load(in);
     rank_b_d.load(in, &b_d);
     select_b_d.load(in, &b_d);
-    sdsl::load(colex_daD, in);
+    my_load(colex_daD, in);
     rmq_colex_daD.load(in);
     rMq_colex_daD.load(in);
-    sdsl::load(colex_id, in);
+    my_load(colex_id, in);
+    // sdsl::load(d, in);
+    // sdsl::load(saD, in);
+    // sdsl::load(isaD, in);
+    // sdsl::load(daD, in);
+    // sdsl::load(lcpD, in);
+    // rmq_lcp_D.load(in);
+    // b_d.load(in);
+    // rank_b_d.load(in, &b_d);
+    // select_b_d.load(in, &b_d);
+    // sdsl::load(colex_daD, in);
+    // rmq_colex_daD.load(in);
+    // rMq_colex_daD.load(in);
+    // sdsl::load(colex_id, in);
   }
 };
 

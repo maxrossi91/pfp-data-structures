@@ -11,15 +11,32 @@ if(NOT bigbwt_POPULATED)
   FetchContent_Populate(bigbwt)
   add_subdirectory(${bigbwt_SOURCE_DIR} ${bigbwt_BINARY_DIR})
 
-  add_library(gsacak OBJECT ${bigbwt_SOURCE_DIR}/gsa/gsacak.c ${bigbwt_SOURCE_DIR}/gsa/gsacak.h)
-  target_include_directories(gsacak PUBLIC "${bigbwt_SOURCE_DIR}/gsa")
+  # add_library(gsacak OBJECT ${bigbwt_SOURCE_DIR}/gsa/gsacak.c ${bigbwt_SOURCE_DIR}/gsa/gsacak.h)
+  # target_include_directories(gsacak PUBLIC "${bigbwt_SOURCE_DIR}/gsa")
   
   add_library(malloc_count OBJECT ${bigbwt_SOURCE_DIR}/malloc_count.c ${bigbwt_SOURCE_DIR}/malloc_count.h)
   target_link_libraries(malloc_count dl)
   target_include_directories(malloc_count PUBLIC "${bigbwt_SOURCE_DIR}")
+  
+  endif()
+  
+## Add gsacak
+FetchContent_Declare(
+  gsacak
+  GIT_REPOSITORY https://github.com/felipelouza/gsa-is.git
+)
 
+FetchContent_GetProperties(gsacak)
+if(NOT gsacak_POPULATED)
+    FetchContent_Populate(gsacak)
+    add_library(gsacak OBJECT ${gsacak_SOURCE_DIR}/gsacak.c ${gsacak_SOURCE_DIR}/gsacak.h)
+    target_include_directories(gsacak PUBLIC "${gsacak_SOURCE_DIR}")
+    
+    add_library(gsacak64 OBJECT ${gsacak_SOURCE_DIR}/gsacak.c ${gsacak_SOURCE_DIR}/gsacak.h)
+    target_include_directories(gsacak64 PUBLIC "${gsacak_SOURCE_DIR}")
+    target_compile_options(gsacak64 PUBLIC -DM64)
+  # add_subdirectory(${gsacak_SOURCE_DIR} ${gsacak_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
-
 
 
 ## Google benchmark
@@ -73,6 +90,9 @@ if(NOT divsufsort_POPULATED)
   target_include_directories(divsufsort PUBLIC "${divsufsort_BINARY_DIR}/include")
   target_include_directories(divsufsort64 PUBLIC "${divsufsort_BINARY_DIR}/include")
 endif()
+
+
+
 
 
 # ## Add BT-CST

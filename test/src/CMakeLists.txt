@@ -4,8 +4,12 @@
 add_executable(ds_building ds_building.cpp)
 target_link_libraries(ds_building common strdup pfp gsacak sdsl malloc_count)
 
-add_executable(ds_building_custom ds_building_custom.cpp)
-target_link_libraries(ds_building_custom common strdup pfp gsacak sdsl malloc_count)
+add_executable(ds_building64 ds_building.cpp)
+target_link_libraries(ds_building64 common strdup pfp gsacak64 sdsl malloc_count)
+target_compile_options(ds_building64 PUBLIC -DM64)
+
+add_executable(ds_building_wt_sdsl ds_building_wt_sdsl.cpp)
+target_link_libraries(ds_building_wt_sdsl common strdup pfp gsacak sdsl malloc_count)
 
 add_executable(sdsl_baseline_cst sdsl_baseline_cst.cpp)
 target_link_libraries(sdsl_baseline_cst common strdup sdsl divsufsort divsufsort64 malloc_count)
@@ -36,3 +40,9 @@ target_link_libraries(pfp_benchmarks common strdup pfp gsacak sdsl divsufsort di
 
 add_executable(pfp_load_test pfp_load_test.cpp)
 target_link_libraries(pfp_load_test common strdup pfp gsacak sdsl malloc_count)
+
+add_executable(sdsl_load_test sdsl_load_test.cpp)
+target_link_libraries(sdsl_load_test common strdup pfp gsacak sdsl malloc_count sdsl divsufsort divsufsort64)
+
+add_executable(pfp_thresholds pfp_thresholds.cpp)
+target_link_libraries(pfp_thresholds common strdup pfp gsacak sdsl malloc_count)

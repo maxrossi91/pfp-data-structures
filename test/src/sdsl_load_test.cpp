@@ -26,11 +26,11 @@
 #define VERBOSE
 
 #include <common.hpp>
-#include <strdup.hpp>
 
 #include <sdsl/rmq_support.hpp>
 #include <sdsl/int_vector.hpp>
 #include <sdsl/io.hpp>
+#include <sdsl/suffix_trees.hpp>
 
 #include <pfp.hpp>
 #include <lce_support.hpp>
@@ -46,12 +46,19 @@ int main(int argc, char* const argv[]) {
   parseArgs(argc, argv, args);
 
 
-  verbose("Window size set to: " , args.w);
+  // verbose("Window size set to: " , args.w);
 
-  verbose("Computing PFP data structures");
+  // pf_parsing pf1(args.filename, args.w);
+
+  // verbose("Storing the PFP to file");
+  // sdsl::store_to_file(pf1, outfile.c_str());
+
+  verbose("Loading PFP data structures from:", args.filename);
   std::chrono::high_resolution_clock::time_point t_insert_start = std::chrono::high_resolution_clock::now();
 
-  pf_parsing<pfp_wt_custom> pf(args.filename, args.w);
+  sdsl::cst_sct3<sdsl::csa_wt<sdsl::wt_huff<sdsl::rrr_vector<>>>, sdsl::lcp_support_sada<>> cst;
+  std::string filename = args.filename + ".sdsl.cst";
+  sdsl::load_from_file(cst, filename);
 
   std::chrono::high_resolution_clock::time_point t_insert_end = std::chrono::high_resolution_clock::now();
 
@@ -59,38 +66,11 @@ int main(int argc, char* const argv[]) {
   verbose("Elapsed time (s): ", std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count());
   auto time = std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count();
 
-  verbose("Providing LCE support");
-  _elapsed_time(
-      pfp_lce_support<pfp_wt_custom> lce_ds(pf)
-  );
 
-  verbose("Providing SA support");
-  _elapsed_time(
-      pfp_sa_support<pfp_wt_custom> pfp_sa(pf)
-  );
-
-  auto mem_peak = malloc_count_peak();
-  verbose("Memory peak: ", malloc_count_peak());
-
-  size_t space = 0;
-  if(args.memo){
-    verbose("Dictionary size (bytes)  : ", sdsl::size_in_bytes(pf.dict));
-    verbose("Parse size (bytes)       : ", sdsl::size_in_bytes(pf.pars));
-    verbose("Wavelet tree size (bytes): ", sdsl::size_in_bytes(pf.w_wt));
-    verbose("M size (bytes)           : ", sdsl::size_in_bytes(pf.M));
-
-    space = sdsl::size_in_bytes(pf);
-    verbose("PFP DS size (bytes): ", space);
+  for (int i = 0; i < cst.csa.size(); ++i)
+  {
+    info(cst.csa[i]);
   }
-
-  if(args.store){
-    verbose("Storing the PFP to file");
-    std::string outfile = args.filename + pf.filesuffix();
-    sdsl::store_to_file(pf, outfile.c_str());
-  }
-
-  if (args.csv)
-    std::cerr << csv(args.filename.c_str(), time, space, mem_peak) << std::endl;
 
   return 0;
 

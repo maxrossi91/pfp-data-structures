@@ -322,6 +322,105 @@ TEST(sa_construct_test,sa_construct){
     }
 }
 
+TEST(sa_construct_test,sa_store_and_load){
+
+    size_t w = 10;
+    pf_parsing<> pf(test_file, w);
+    pfp_sa_support<> sa_ds(pf);
+
+    // TEST sa_ds
+    std::vector<char> text;
+    read_fasta_file(test_file.c_str(), text);
+    std::vector<char> tmp(w-1,'#');
+    text.insert(text.begin(),tmp.begin(),tmp.end());
+    text.push_back(0);
+
+    uint8_t num_bytes = 1;
+    // build cst of the Text
+    TEST_COUT << "Computing CSA of the text" << std::endl;
+    sdsl::csa_wt<> csa;
+    sdsl::construct_im(csa, static_cast<const char *>(&text[0]), num_bytes);
+
+    TEST_COUT << "Testing SA ds" << std::endl;
+    for (int i = 0; i < text.size(); ++i)
+    {
+        EXPECT_EQ(sa_ds.sa(i), (csa[i] + (text.size()) - w + 1) % (text.size())) << "At positions: " << i;
+    }
+
+    TEST_COUT << "Storing the PFP to file" << std::endl;
+    std::string outfile = test_file + pf.filesuffix();
+    sdsl::store_to_file(pf, outfile.c_str());
+
+    TEST_COUT << "Begin paper test for p1" << std::endl;
+
+    pf_parsing<> pf1;
+    sdsl::load_from_file(pf1, outfile);
+    TEST_COUT << "Pfp built" << std::endl;
+
+    // TEST n
+    EXPECT_EQ(pf1.n, text.size());
+    TEST_COUT << "Test n" << std::endl;
+
+    // TEST n_phrases
+    EXPECT_EQ(pf1.dict.n_phrases(), pf.dict.n_phrases());
+    TEST_COUT << "Test n_phrases" << std::endl;
+
+    // TEST b_d
+    for (size_t i = 0; i < pf1.dict.b_d.size(); ++i)
+    {
+        EXPECT_EQ(pf1.dict.b_d[i], pf.dict.b_d[i]) << "at position: " << i;
+    }
+    TEST_COUT << "Test b_d" << std::endl;
+
+    // TEST phrase_length
+    for (size_t i = 0; i < pf.dict.n_phrases(); ++i)
+    {
+        EXPECT_EQ(pf1.dict.length_of_phrase(i + 1), pf.dict.length_of_phrase(i + 1));
+    }
+    TEST_COUT << "Test phrase_length" << std::endl;
+
+    // TEST b_bwt
+    for (size_t i = 0; i < pf1.b_bwt.size(); ++i)
+    {
+        EXPECT_EQ(pf1.b_bwt[i], pf.b_bwt[i]) << "at position: " << i;
+    }
+    TEST_COUT << "Test b_bwt" << std::endl;
+
+    // TEST M
+    for (size_t i = 0; i < pf1.M.size(); ++i)
+    {
+        EXPECT_EQ(pf1.M[i].len, pf.M[i].len) << "at position: " << i;
+        EXPECT_EQ(pf1.M[i].left, pf.M[i].left) << "at position: " << i;
+        EXPECT_EQ(pf1.M[i].right, pf.M[i].right) << "at position: " << i;
+    }
+    TEST_COUT << "Test M" << std::endl;
+
+    // TEST BWT(P) - wavelet tree
+    for (size_t i = 0; i < pf1.w_wt.size(); ++i)
+    {
+        EXPECT_EQ(pf1.w_wt[i], pf.w_wt[i]) << "at position: " << i;
+    }
+    TEST_COUT << "Test BWT(P)" << std::endl;
+
+    pfp_lce_support<> lce_pf(pf);
+    pfp_lce_support<> lce_pf1(pf1);
+
+    for (int i = 0; i < text.size() - 1; ++i)
+    {
+        EXPECT_EQ(lce_pf.lce(i, i + 1), lce_pf1.lce(i, i + 1));
+    }
+    TEST_COUT << "Test LCE ds" << std::endl;
+
+    pfp_sa_support<> sa_pf(pf);
+    pfp_sa_support<> sa_pf1(pf1);
+
+    for (int i = 0; i < sa_pf.size(); ++i)
+    {
+        EXPECT_EQ(sa_pf.sa(i), sa_pf1.sa(i));
+    }
+    TEST_COUT << "Test SA ds" << std::endl;
+}
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

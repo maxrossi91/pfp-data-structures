@@ -2,7 +2,7 @@
 
 # Edited from bigbwt script file
 
-import sys, time, argparse, subprocess, os.path
+import sys, time, argparse, subprocess, os.path, threading
 
 Description = """
 Tool to build the BWT for higly repetive files using the approach
@@ -22,8 +22,123 @@ ds_dirname      = os.path.join(dirname, "test/src")
 
 parse_exe       = os.path.join(bigbwt_dirname, "newscan.x")
 parseNT_exe     = os.path.join(bigbwt_dirname, "newscanNT.x")
-build_pfp_ds          = os.path.join(ds_dirname, "ds_building")
-build_pfp_ds64          = os.path.join(ds_dirname, "ds_building64")
+parsebwt_exe    =  os.path.join(bigbwt_dirname, "bwtparse")
+parsebwt_exe64  =  os.path.join(bigbwt_dirname, "bwtparse64")
+pfbwt_exe       =  os.path.join(bigbwt_dirname, "pfbwt.x")
+pfbwtNT_exe     =  os.path.join(bigbwt_dirname, "pfbwtNT.x")
+pfbwt_exe64     =  os.path.join(bigbwt_dirname, "pfbwt64.x")
+pfbwtNT_exe64   =  os.path.join(bigbwt_dirname, "pfbwtNT64.x")
+
+build_pfp_ds       = os.path.join(ds_dirname, "ds_building")
+build_pfp_ds64     = os.path.join(ds_dirname, "ds_building64")
+thresholds_pfp_ds  = os.path.join(ds_dirname, "pfp_thresholds")
+
+
+class PFPdatastructure(threading.Thread):
+    def __init__(self, name, counter, args):
+        threading.Thread.__init__(self)
+        self.threadID = counter
+        self.name = name
+        self.counter = counter
+        self.args = args
+
+    def run(self):
+      args = self.args
+      logfile = args.logfile
+      logfile_name = args.logfile_name
+      print("{} PFP started!".format(self.getName()))        # "Thread-x started!"
+
+      start = time.time()
+      parse_size = os.path.getsize(args.input+".parse")/4
+      dictionary_size = os.path.getsize(args.input+".dict")
+
+      if(parse_size >=  (2**31-1) or dictionary_size >=  (2**31-4) ):
+        command = "{exe} {file} -w {wsize}".format(
+                  exe = os.path.join(args.bigbwt_dir,build_pfp_ds64),
+                  wsize=args.wsize, file=args.input)
+      else:
+        command = "{exe} {file} -w {wsize}".format(
+            exe = os.path.join(args.bigbwt_dir,build_pfp_ds),
+            wsize=args.wsize, file=args.input)
+
+      command += " -s"
+      if args.m: command += " -m"
+      
+      print("==== Computing PFP data structures. Command:", command)
+      if(execute_command(command,logfile,logfile_name)!=True):
+        return
+      print("PFP Elapsed time: {0:.4f}".format(time.time()-start));
+
+
+
+class BWT(threading.Thread):
+  def __init__(self, name, counter, args):
+        threading.Thread.__init__(self)
+        self.threadID = counter
+        self.name = name
+        self.counter = counter
+        self.args = args
+
+  def run(self):
+      args = self.args
+      logfile = args.logfile
+      logfile_name = args.logfile_name
+      print("{} BWT started!".format(self.getName()))        # "Thread-x started!"
+
+      # ----------- computation of the BWT of the parsing
+      start = time.time()
+      parse_size = os.path.getsize(args.input+".parse")/4
+      if(parse_size >=  (2**32-1) ):
+        print("Sorry, the parse contains %d words" %  parse_size )
+        print("which is more than my current limit 2^32-2")
+        print("Please re-run the program with a larger modulus (currently %d)" % args.mod)
+        sys.exit(1)  
+      elif(parse_size >=  (2**31-1) ):
+        command = "{exe} {file}".format(
+                exe = os.path.join(args.bigbwt_dir,parsebwt_exe64), file=args.input)
+      else:
+        command = "{exe} {file}".format(
+                exe = os.path.join(args.bigbwt_dir,parsebwt_exe), file=args.input)
+      # if (args.s or args.e or args.S): command += " -s"
+      if (args.t>0): command += " -t " + str(args.t)
+      print("==== Computing BWT of parsing. Command:", command)
+      if(execute_command(command,logfile,logfile_name)!=True):
+        return
+      print("Elapsed time: {0:.4f}".format(time.time()-start));      
+      
+      # ----------- compute final BWT using dictionary and BWT of parse    
+      start = time.time()     
+      if(os.path.getsize(args.input+".dict") >=  (2**31-4) ):
+        # 64 bit version with and without threads
+        if args.t>0 and args.s==False and args.e==False:
+          command = "{exe} -w {wsize} {file} -t {th}".format(
+                exe = os.path.join(args.bigbwt_dir,pfbwt_exe64),
+                wsize=args.wsize, file=args.input, th=args.t)
+        else:
+          command = "{exe} -w {wsize} {file}".format( 
+                  exe = os.path.join(args.bigbwt_dir,pfbwtNT_exe64),
+                  wsize=args.wsize, file=args.input)        
+      else:  # 32 bit version
+        if args.t>0 and args.s==False and args.e==False:
+          command = "{exe} -w {wsize} {file} -t {th}".format(
+                  exe = os.path.join(args.bigbwt_dir,pfbwt_exe),
+                  wsize=args.wsize, file=args.input, th=args.t)
+        else:
+          command = "{exe} -w {wsize} {file}".format(
+                  exe = os.path.join(args.bigbwt_dir,pfbwtNT_exe),
+                  wsize=args.wsize, file=args.input)
+      # if args.s: command += " -s"
+      # if args.e: command += " -e"
+      # if args.S: command += " -S"
+      
+      print("==== Computing final BWT. Command:", command)
+      if(execute_command(command,logfile,logfile_name)!=True):
+        return
+      print("BWT Elapsed time: {0:.4f}".format(time.time()-start))      
+
+
+
+
 
 
 def main():
@@ -57,7 +172,8 @@ def main():
   args.bigbwt_dir = os.path.split(sys.argv[0])[0]
   print("Sending logging messages to file:", logfile_name)
   with open(logfile_name,"a") as logfile:
-
+    args.logfile = logfile
+    args.logfile_name = logfile_name
     # ---------- parsing of the input file
     start0 = start = time.time()
     if args.t>0:
@@ -94,19 +210,28 @@ def main():
       return
 
     # ----------- computation of the PFP data structures
+    
+    pfpds_thread = PFPdatastructure(name = "{}".format(args.input), args=args, counter=1)  # ...Instantiate a thread and pass a unique ID to it
+    pfpds_thread.start()                                       # ...Start the thread, invoke the run method
+    bwt_thread = BWT(name = "{}".format(args.input), args=args, counter=2)  # ...Instantiate a thread and pass a unique ID to it
+    bwt_thread.start()                                       # ...Start the thread, invoke the run method
+
+    pfpds_thread.join()
+    bwt_thread.join()
+
+    print("Total construction time: {0:.4f}".format(time.time()-start0))
+    # ---- print elapsed time to file
+    command = "echo Total construction time: {0:.4f}".format(time.time()-start0)
+    if(execute_command(command,logfile,logfile_name)!=True):
+      return
+
+    # ---- computation of thresholds
     start = time.time()
-    parse_size = os.path.getsize(args.input+".parse")/4
-    dictionary_size = os.path.getsize(args.input+".dict")
 
-    if(parse_size >=  (2**31-1) or dictionary_size >=  (2**31-1) ):
-      command = "{exe} {file} -w {wsize}".format(
-                exe = os.path.join(args.bigbwt_dir,build_pfp_ds64),
-                wsize=args.wsize, file=args.input)
-    else:
-      command = "{exe} {file} -w {wsize}".format(
-          exe = os.path.join(args.bigbwt_dir,build_pfp_ds),
-          wsize=args.wsize, file=args.input)
-
+    command = "{exe} {file}".format(
+              exe = os.path.join(args.bigbwt_dir,thresholds_pfp_ds),
+              file=args.input)
+    
     if args.s: command += " -s"
     if args.m: command += " -m"
     
@@ -114,11 +239,7 @@ def main():
     if(execute_command(command,logfile,logfile_name)!=True):
       return
     print("Elapsed time: {0:.4f}".format(time.time()-start));
-    print("Total construction time: {0:.4f}".format(time.time()-start0))
-    # ---- print elapsed time to file
-    command = "echo Total construction time: {0:.4f}".format(time.time()-start0)
-    if(execute_command(command,logfile,logfile_name)!=True):
-      return
+
     # ---- delete intermediate files
     delete_temp_files(args,logfile,logfile_name)
 

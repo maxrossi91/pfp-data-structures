@@ -11,6 +11,17 @@ target_compile_options(ds_building64 PUBLIC -DM64)
 add_executable(ds_building_wt_sdsl ds_building_wt_sdsl.cpp)
 target_link_libraries(ds_building_wt_sdsl common strdup pfp gsacak sdsl malloc_count)
 
+add_executable(ds_building_wt_sdsl64 ds_building_wt_sdsl.cpp)
+target_link_libraries(ds_building_wt_sdsl64 common strdup pfp gsacak64 sdsl malloc_count)
+target_compile_options(ds_building_wt_sdsl64 PUBLIC -DM64)
+
+add_executable(ds_building_wt_sdsl_2 ds_building_wt_sdsl_2.cpp)
+target_link_libraries(ds_building_wt_sdsl_2 common strdup pfp gsacak sdsl malloc_count)
+
+add_executable(ds_building_wt_sdsl_264 ds_building_wt_sdsl_2.cpp)
+target_link_libraries(ds_building_wt_sdsl_264 common strdup pfp gsacak64 sdsl malloc_count)
+target_compile_options(ds_building_wt_sdsl_264 PUBLIC -DM64)
+
 add_executable(sdsl_baseline_cst sdsl_baseline_cst.cpp)
 target_link_libraries(sdsl_baseline_cst common strdup sdsl divsufsort divsufsort64 malloc_count)
 

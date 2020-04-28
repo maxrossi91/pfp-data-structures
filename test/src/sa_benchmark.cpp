@@ -155,11 +155,11 @@ void BM_pfp_sa(benchmark::State &st, std::string s)
     // Setup *setup = Setup::PerformSetup();
     // auto pf = setup->get_pfp(s);
 
-    pf_parsing<> pf;
+    pf_parsing<pfp_wt_sdsl_2> pf;
     std::string filename = s + pf.filesuffix();
     sdsl::load_from_file(pf, filename);
 
-    pfp_sa_support<> pf_sa(pf);
+    pfp_sa_support<pfp_wt_sdsl_2> pf_sa(pf);
 
     int n_iter = st.range(0);
 

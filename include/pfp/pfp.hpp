@@ -345,6 +345,13 @@ std::string pf_parsing<pfp_wt_sdsl>::filesuffix() const
   return ".pf.wt_sdsl.ds";
 }
 
+// Specialization for pfp_wt_sdsl_2
+template <>
+std::string pf_parsing<pfp_wt_sdsl_2>::filesuffix() const
+{
+  return ".pf.wt_sdsl_2.ds";
+}
+
   using pf_parsing_custom = pf_parsing<pfp_wt_custom>;
   using pf_parsing_sdsl = pf_parsing<pfp_wt_sdsl>;
 

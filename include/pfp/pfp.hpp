@@ -331,12 +331,19 @@ public:
 
   std::string filesuffix() const
   {
-    return ".pf.ds";
+    return ".pf.ds.other";
   }
 
 
 };
 
+
+// Specialization for pfp_wt_custom
+template <>
+std::string pf_parsing<pfp_wt_custom>::filesuffix() const
+{
+  return ".pf.ds";
+}
 
 // Specialization for pfp_wt_sdsl
 template <>

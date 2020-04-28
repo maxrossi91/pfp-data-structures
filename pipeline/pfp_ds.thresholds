@@ -61,7 +61,7 @@ class PFPdatastructure(threading.Thread):
             exe = os.path.join(args.bigbwt_dir,build_pfp_ds),
             wsize=args.wsize, file=args.input)
 
-      if args.s: command += " -s"
+      command += " -s"
       if args.m: command += " -m"
       
       print("==== Computing PFP data structures. Command:", command)

@@ -725,17 +725,17 @@ BENCHMARK_CAPTURE(BM_pfp_lce_custom, salmonella_5000, std::string("../../../data
 // // BENCHMARK_CAPTURE(BM_pfp_thresholds, world_leaders, std::string("../../../data/pizzachili/repcorpus/real/world_leaders"));
 // // BENCHMARK_CAPTURE(BM_pfp_thresholds, cere, std::string("../../../data/pizzachili/repcorpus/real/cere"));
 
-// BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, yeast, std::string("../data/yeast.fasta"));
-BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, chr19_1, std::string("../../../data/Chr19/chr19.1.fa"));
-BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, chr19_16, std::string("../../../data/Chr19/chr19.16.fa"));
-BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, chr19_128, std::string("../../../data/Chr19/chr19.128.fa"));
-BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, chr19_512, std::string("../../../data/Chr19/chr19.512.fa"));
-BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, salmonella_50, std::string("../../../data/Salmonella/salmonella.50.fa"));
-BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, salmonella_500, std::string("../../../data/Salmonella/salmonella.500.fa"));
-BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, salmonella_5000, std::string("../../../data/Salmonella/salmonella.5000.fa"));
-// BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, einstein_en, std::string("../../../data/pizzachili/repcorpus/real/einstein.en.txt"));
-// BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, world_leaders, std::string("../../../data/pizzachili/repcorpus/real/world_leaders"));
-// BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, cere, std::string("../../../data/pizzachili/repcorpus/real/cere"));
+// // BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, yeast, std::string("../data/yeast.fasta"));
+// BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, chr19_1, std::string("../../../data/Chr19/chr19.1.fa"));
+// BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, chr19_16, std::string("../../../data/Chr19/chr19.16.fa"));
+// BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, chr19_128, std::string("../../../data/Chr19/chr19.128.fa"));
+// BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, chr19_512, std::string("../../../data/Chr19/chr19.512.fa"));
+// BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, salmonella_50, std::string("../../../data/Salmonella/salmonella.50.fa"));
+// BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, salmonella_500, std::string("../../../data/Salmonella/salmonella.500.fa"));
+// BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, salmonella_5000, std::string("../../../data/Salmonella/salmonella.5000.fa"));
+// // BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, einstein_en, std::string("../../../data/pizzachili/repcorpus/real/einstein.en.txt"));
+// // BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, world_leaders, std::string("../../../data/pizzachili/repcorpus/real/world_leaders"));
+// // BENCHMARK_CAPTURE(BM_pfp_thresholds_custom, cere, std::string("../../../data/pizzachili/repcorpus/real/cere"));
 
 // Run the benchmark
 BENCHMARK_MAIN();

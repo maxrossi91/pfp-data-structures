@@ -54,6 +54,3 @@ target_link_libraries(pfp_load_test common strdup pfp gsacak sdsl malloc_count)
 
 add_executable(sdsl_load_test sdsl_load_test.cpp)
 target_link_libraries(sdsl_load_test common strdup pfp gsacak sdsl malloc_count sdsl divsufsort divsufsort64)
-
-add_executable(pfp_thresholds pfp_thresholds.cpp)
-target_link_libraries(pfp_thresholds common strdup pfp gsacak sdsl malloc_count)

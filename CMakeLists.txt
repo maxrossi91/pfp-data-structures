@@ -53,4 +53,3 @@ add_subdirectory(include)
 add_subdirectory(test)
 
 configure_file(${PROJECT_SOURCE_DIR}/pipeline/pfp_ds ${PROJECT_BINARY_DIR}/pfp_ds)
-configure_file(${PROJECT_SOURCE_DIR}/pipeline/pfp_ds.thresholds ${PROJECT_BINARY_DIR}/pfp_ds.thresholds)
